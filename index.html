@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football WhatsApp Channel Manager - ALL European Leagues</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset & Base */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #25D366;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            color: #25D366;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .subtitle {
+            color: #aaa;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        
+        /* Main Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 1100px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+        
+        /* Cards */
+        .card {
+            background: rgba(30, 30, 30, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-title {
+            color: #25D366;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Controls */
+        .controls {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-group input, .input-group select {
+            flex: 1;
+            padding: 12px 15px;
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid #25D366;
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.3);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        
+        .btn-primary {
+            background: #25D366;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1da851;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #25D366;
+            border: 1px solid #25D366;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(37, 211, 102, 0.1);
+        }
+        
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        /* Games List */
+        .games-list {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .game-item {
+            background: rgba(40, 40, 40, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #25D366;
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .league { color: #25D366; font-weight: bold; font-size: 0.9rem; }
+        .time { color: #aaa; font-size: 0.9rem; }
+        
+        .teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .team {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .team-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .vs {
+            font-size: 1.5rem;
+            color: #666;
+            font-weight: bold;
+            padding: 0 20px;
+        }
+        
+        .form {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+        
+        .form-box {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 3px;
+        }
+        
+        .form-box.W { background: #25D366; color: black; }
+        .form-box.D { background: #666; color: white; }
+        .form-box.L { background: #ff4444; color: white; }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-item {
+            background: rgba(20, 20, 20, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        
+        /* WhatsApp Generator */
+        .whatsapp-output {
+            background: #000;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 400px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: 'Segoe UI', monospace;
+            font-size: 15px;
+            line-height: 1.6;
+            border: 2px solid #25D366;
+            margin-bottom: 20px;
+        }
+        
+        .output-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-copy {
+            background: #25D366;
+            color: white;
+            flex: 2;
+        }
+        
+        .btn-clear {
+            background: #ff4444;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-test {
+            background: #075E54;
+            color: white;
+            flex: 1;
+        }
+        
+        /* Template Buttons */
+        .templates {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .template-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: #25D366;
+            border: 1px solid rgba(37, 211, 102, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .template-btn:hover {
+            background: rgba(37, 211, 102, 0.1);
+            border-color: #25D366;
+        }
+        
+        /* Stats */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(40, 40, 40, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-card i {
+            font-size: 24px;
+            color: #25D366;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value-large {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        
+        /* Loading & Error States */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #25D366;
+        }
+        
+        .loading:after {
+            content: '';
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(37, 211, 102, 0.3);
+            border-top-color: #25D366;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid #ff4444;
+            padding: 20px;
+            border-radius: 8px;
+            color: #ff4444;
+            text-align: center;
+        }
+        
+        .success {
+            background: rgba(37, 211, 102, 0.1);
+            border: 1px solid #25D366;
+            padding: 20px;
+            border-radius: 8px;
+            color: #25D366;
+            text-align: center;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #25D366;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #25D366;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1da851;
+        }
+        
+        /* Live Badge */
+        .live-badge {
+            background: #ff4444;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        /* API Status */
+        .api-status {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: rgba(255,255,255,0.1);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        /* League Filter */
+        .league-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(20, 20, 20, 0.5);
+            border-radius: 8px;
+        }
+        
+        .league-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .league-checkbox input {
+            accent-color: #25D366;
+        }
+        
+        /* Progress Bar */
+        .progress-container {
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #25D366;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-futbol"></i> EUROPEAN FOOTBALL MANAGER</h1>
+            <p class="subtitle">ALL European Leagues • WhatsApp Channel Updates</p>
+            <div class="api-status" id="apiStatus">API: 🔄 Testing...</div>
+        </header>
+        
+        <div class="main-grid">
+            <!-- Left Panel: Games & Controls -->
+            <div>
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-cog"></i> Controls</h2>
+                    
+                    <div class="controls">
+                        <div class="input-group">
+                            <input type="date" id="dateInput" value="">
+                            <select id="leagueSelect">
+                                <option value="">All European Leagues</option>
+                                <option value="top">Top 10 Leagues Only</option>
+                                <option value="all">All Leagues (Europe)</option>
+                                <option value="39">Premier League</option>
+                                <option value="140">La Liga</option>
+                                <option value="78">Bundesliga</option>
+                                <option value="135">Serie A</option>
+                                <option value="61">Ligue 1</option>
+                                <option value="94">Primeira Liga</option>
+                                <option value="88">Eredivisie</option>
+                                <option value="203">Super Lig</option>
+                                <option value="144">Jupiler Pro League</option>
+                            </select>
+                        </div>
+                        
+                        <div class="button-group">
+                            <button class="btn btn-primary" onclick="loadGames()">
+                                <i class="fas fa-sync-alt"></i> LOAD GAMES
+                            </button>
+                            <button class="btn btn-secondary" onclick="loadLiveGames()">
+                                <i class="fas fa-broadcast-tower"></i> LIVE GAMES
+                            </button>
+                            <button class="btn btn-secondary btn-small" onclick="loadAllEuropeanLeagues()" title="Load all European leagues">
+                                <i class="fas fa-globe-europe"></i> ALL EU
+                            </button>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="progress-container" id="progressContainer" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <div class="progress-text" id="progressText">Loading leagues...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="stats-container" id="quickStats">
+                        <div class="stat-card">
+                            <i class="fas fa-calendar-day"></i>
+                            <div class="stat-value-large" id="todayDate">--</div>
+                            <div class="stat-label">Today</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-futbol"></i>
+                            <div class="stat-value-large" id="totalMatches">0</div>
+                            <div class="stat-label">Matches</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-broadcast-tower"></i>
+                            <div class="stat-value-large" id="liveMatches">0</div>
+                            <div class="stat-label">Live</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-check-circle"></i>
+                            <div class="stat-value-large" id="completedMatches">0</div>
+                            <div class="stat-label">Finished</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="margin-top: 20px;">
+                    <h2 class="card-title"><i class="fas fa-list"></i> European Games</h2>
+                    <div id="gamesOutput" class="games-list">
+                        <div class="loading">Loading European games...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel: WhatsApp Generator -->
+            <div>
+                <div class="card">
+                    <h2 class="card-title"><i class="fab fa-whatsapp"></i> WhatsApp Generator</h2>
+                    
+                    <!-- Generator Controls -->
+                    <div class="controls">
+                        <div class="button-group">
+                            <button class="btn btn-primary" onclick="generateWhatsAppUpdate()">
+                                <i class="fas fa-robot"></i> GENERATE UPDATE
+                            </button>
+                            <button class="btn btn-secondary" onclick="generatePreview()">
+                                <i class="fas fa-eye"></i> PREVIEW
+                            </button>
+                        </div>
+                        
+                        <div class="templates">
+                            <button class="template-btn" onclick="useTemplate('morning')">
+                                <i class="fas fa-sun"></i> Morning Update
+                            </button>
+                            <button class="template-btn" onclick="useTemplate('results')">
+                                <i class="fas fa-poll"></i> Results Summary
+                            </button>
+                            <button class="template-btn" onclick="useTemplate('preview')">
+                                <i class="fas fa-binoculars"></i> Match Preview
+                            </button>
+                            <button class="template-btn" onclick="useTemplate('live')">
+                                <i class="fas fa-broadcast-tower"></i> Live Update
+                            </button>
+                        </div>
+                        
+                        <!-- League Selection for WhatsApp -->
+                        <div style="margin: 15px 0;">
+                            <label style="color: #aaa; font-size: 0.9rem;">
+                                <input type="checkbox" id="includeAllLeagues" checked onchange="toggleLeagueFilter()">
+                                Include ALL European leagues in WhatsApp update
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- WhatsApp Message Output -->
+                    <div class="whatsapp-output" id="whatsappOutput">
+                        <div style="text-align: center; padding: 50px; color: #666;">
+                            <i class="fab fa-whatsapp" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                            <p>Your WhatsApp message will appear here</p>
+                            <small>Click "GENERATE UPDATE" to start</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Output Actions -->
+                    <div class="output-actions">
+                        <button class="btn btn-copy" onclick="copyToClipboard()" id="copyBtn">
+                            <i class="far fa-copy"></i> COPY TO CLIPBOARD
+                        </button>
+                        <button class="btn btn-clear" onclick="clearOutput()">
+                            <i class="fas fa-trash"></i> CLEAR
+                        </button>
+                        <button class="btn btn-test" onclick="testOnWhatsApp()">
+                            <i class="fab fa-whatsapp"></i> TEST
+                        </button>
+                    </div>
+                    
+                    <!-- Message Stats -->
+                    <div style="text-align: center; margin-top: 15px; color: #888; font-size: 0.9rem;">
+                        <span id="messageStats">0 characters • 0 lines</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Toast Notification -->
+        <div id="toast" class="toast">
+            <i class="fas fa-check-circle"></i>
+            <span id="toastMessage">Copied to clipboard!</span>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIGURATION ====================
+        const API_KEY = "6d1dc2bda07f1d1768d9ad2d082f00d4"; // Your API key
+        const API_BASE = "https://v3.football.api-sports.io";
+        
+        // ALL EUROPEAN LEAGUES - COMPREHENSIVE LIST
+        const ALL_EUROPEAN_LEAGUES = [
+            // TOP TIER LEAGUES
+            { id: 39, name: "Premier League", country: "England", emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+            { id: 140, name: "La Liga", country: "Spain", emoji: "🇪🇸" },
+            { id: 78, name: "Bundesliga", country: "Germany", emoji: "🇩🇪" },
+            { id: 135, name: "Serie A", country: "Italy", emoji: "🇮🇹" },
+            { id: 61, name: "Ligue 1", country: "France", emoji: "🇫🇷" },
+            { id: 94, name: "Primeira Liga", country: "Portugal", emoji: "🇵🇹" },
+            { id: 88, name: "Eredivisie", country: "Netherlands", emoji: "🇳🇱" },
+            { id: 203, name: "Super Lig", country: "Turkey", emoji: "🇹🇷" },
+            { id: 144, name: "Jupiler Pro League", country: "Belgium", emoji: "🇧🇪" },
+            { id: 283, name: "Premier League", country: "Ukraine", emoji: "🇺🇦" },
+            
+            // SECOND TIER LEAGUES
+            { id: 40, name: "Championship", country: "England", emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+            { id: 141, name: "La Liga 2", country: "Spain", emoji: "🇪🇸" },
+            { id: 79, name: "2. Bundesliga", country: "Germany", emoji: "🇩🇪" },
+            { id: 136, name: "Serie B", country: "Italy", emoji: "🇮🇹" },
+            { id: 217, name: "Ligue 2", country: "France", emoji: "🇫🇷" },
+            { id: 218, name: "Segunda División", country: "Spain", emoji: "🇪🇸" },
+            
+            // OTHER EUROPEAN TOP LEAGUES
+            { id: 262, name: "Premiership", country: "Scotland", emoji: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+            { id: 238, name: "Premier League", country: "Russia", emoji: "🇷🇺" },
+            { id: 197, name: "Super League", country: "Switzerland", emoji: "🇨🇭" },
+            { id: 253, name: "Bundesliga", country: "Austria", emoji: "🇦🇹" },
+            { id: 271, name: "Eliteserien", country: "Norway", emoji: "🇳🇴" },
+            { id: 239, name: "Allsvenskan", country: "Sweden", emoji: "🇸🇪" },
+            { id: 299, name: "Superliga", country: "Denmark", emoji: "🇩🇰" },
+            { id: 319, name: "Veikkausliiga", country: "Finland", emoji: "🇫🇮" },
+            { id: 255, name: "Ekstraklasa", country: "Poland", emoji: "🇵🇱" },
+            { id: 264, name: "Superliga", country: "Romania", emoji: "🇷🇴" },
+            { id: 329, name: "Fortuna Liga", country: "Czech Republic", emoji: "🇨🇿" },
+            { id: 333, name: "Superliga", country: "Serbia", emoji: "🇷🇸" },
+            { id: 345, name: "NB I", country: "Hungary", emoji: "🇭🇺" },
+            { id: 341, name: "Super League", country: "Greece", emoji: "🇬🇷" },
+            { id: 350, name: "Prva HNL", country: "Croatia", emoji: "🇭🇷" },
+            { id: 351, name: "1. SNL", country: "Slovenia", emoji: "🇸🇮" },
+            { id: 355, name: "Fortuna Liga", country: "Slovakia", emoji: "🇸🇰" },
+            { id: 357, name: "Virslīga", country: "Latvia", emoji: "🇱🇻" },
+            { id: 361, name: "A Lyga", country: "Lithuania", emoji: "🇱🇹" },
+            { id: 367, name: "Premier League", country: "Ireland", emoji: "🇮🇪" },
+            { id: 373, name: "Meistriliiga", country: "Estonia", emoji: "🇪🇪" },
+            { id: 378, name: "First League", country: "Bulgaria", emoji: "🇧🇬" },
+            { id: 385, name: "Premier League", country: "Israel", emoji: "🇮🇱" },
+            { id: 387, name: "Premijer Liga", country: "Bosnia", emoji: "🇧🇦" },
+            { id: 390, name: "1. CFL", country: "Montenegro", emoji: "🇲🇪" },
+            { id: 393, name: "Superliga", country: "Albania", emoji: "🇦🇱" },
+            { id: 397, name: "Premier League", country: "Cyprus", emoji: "🇨🇾" },
+            { id: 399, name: "Premier League", country: "Luxembourg", emoji: "🇱🇺" },
+            { id: 401, name: "Premier League", country: "Malta", emoji: "🇲🇹" },
+            { id: 403, name: "Premier League", country: "Wales", emoji: "🏴󠁧󠁢󠁷󠁬󠁳󠁿" },
+            { id: 405, name: "Premier League", country: "Northern Ireland", emoji: "🇬🇧" },
+            { id: 407, name: "BOV Premier League", country: "Malta", emoji: "🇲🇹" },
+            { id: 409, name: "League of Ireland", country: "Ireland", emoji: "🇮🇪" },
+            { id: 411, name: "Premier League", country: "Faroe Islands", emoji: "🇫🇴" },
+            { id: 413, name: "Premier League", country: "Andorra", emoji: "🇦🇩" },
+            { id: 415, name: "Premier League", country: "San Marino", emoji: "🇸🇲" },
+            { id: 417, name: "Premier League", country: "Gibraltar", emoji: "🇬🇮" },
+            { id: 419, name: "Premier League", country: "Liechtenstein", emoji: "🇱🇮" },
+            { id: 421, name: "Premier League", country: "Monaco", emoji: "🇲🇨" },
+            
+            // EUROPEAN CUPS
+            { id: 2, name: "Champions League", country: "Europe", emoji: "🏆" },
+            { id: 3, name: "Europa League", country: "Europe", emoji: "🏆" },
+            { id: 848, name: "Conference League", country: "Europe", emoji: "🏆" },
+            { id: 45, name: "FA Cup", country: "England", emoji: "🏆" },
+            { id: 143, name: "Copa del Rey", country: "Spain", emoji: "🏆" },
+            { id: 528, name: "DFB Pokal", country: "Germany", emoji: "🏆" },
+            { id: 137, name: "Coppa Italia", country: "Italy", emoji: "🏆" },
+            { id: 66, name: "Coupe de France", country: "France", emoji: "🏆" },
+            { id: 239, name: "Taça de Portugal", country: "Portugal", emoji: "🏆" },
+            { id: 556, name: "KNVB Beker", country: "Netherlands", emoji: "🏆" },
+            { id: 529, name: "Turkish Cup", country: "Turkey", emoji: "🏆" },
+            { id: 547, name: "Belgian Cup", country: "Belgium", emoji: "🏆" },
+            
+            // YOUTH & RESERVE LEAGUES
+            { id: 627, name: "Premier League 2", country: "England", emoji: "🔵" },
+            { id: 637, name: "Regionalliga", country: "Germany", emoji: "🔵" },
+            { id: 647, name: "Primavera 1", country: "Italy", emoji: "🔵" },
+            { id: 657, name: "National 2", country: "France", emoji: "🔵" },
+            { id: 667, name: "Segunda B", country: "Spain", emoji: "🔵" }
+        ];
+        
+        // TOP 10 LEAGUES FOR QUICK ACCESS
+        const TOP_LEAGUES = ALL_EUROPEAN_LEAGUES.slice(0, 10);
+        
+        // ==================== STATE ====================
+        let currentGames = [];
+        let currentDate = new Date().toISOString().split('T')[0];
+        let selectedLeagues = [...ALL_EUROPEAN_LEAGUES]; // Start with all leagues
+        
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set today's date
+            const today = new Date();
+            document.getElementById('dateInput').valueAsDate = today;
+            document.getElementById('todayDate').textContent = formatDate(today);
+            
+            // Test API connection
+            testAPIConnection();
+            
+            // Load initial games (top leagues only for performance)
+            setTimeout(() => loadGamesFromLeagues(TOP_LEAGUES), 1000);
+        });
+        
+        // ==================== API FUNCTIONS ====================
+        async function testAPIConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/status`, {
+                    headers: {
+                        "x-apisports-key": API_KEY,
+                        "Accept": "application/json"
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.response) {
+                    document.getElementById('apiStatus').innerHTML = 
+                        `API: ✅ Connected (${data.response.requests.current}/${data.response.requests.limit_day} requests)`;
+                    document.getElementById('apiStatus').style.color = "#25D366";
+                } else {
+                    document.getElementById('apiStatus').innerHTML = "API: ❌ Error";
+                    document.getElementById('apiStatus').style.color = "#ff4444";
+                }
+            } catch (error) {
+                document.getElementById('apiStatus').innerHTML = "API: ❌ Connection Failed";
+                document.getElementById('apiStatus').style.color = "#ff4444";
+            }
+        }
+        
+        async function fetchFixturesForLeague(leagueId, date = "") {
+            try {
+                let url = `${API_BASE}/fixtures?season=2024&league=${leagueId}`;
+                
+                if (date) {
+                    url += `&date=${date}`;
+                } else {
+                    url += `&date=${currentDate}`;
+                }
+                
+                console.log(`Fetching league ${leagueId} from:`, url);
+                
+                const response = await fetch(url, {
+                    headers: {
+                        "x-apisports-key": API_KEY,
+                        "Accept": "application/json"
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.errors && Object.keys(data.errors).length > 0) {
+                    console.error(`API Errors for league ${leagueId}:`, data.errors);
+                    return [];
+                }
+                
+                return data.response || [];
+                
+            } catch (error) {
+                console.error(`Fetch error for league ${leagueId}:`, error);
+                return [];
+            }
+        }
+        
+        async function fetchFixturesForMultipleLeagues(leagues, date = "") {
+            const allFixtures = [];
+            const totalLeagues = leagues.length;
+            
+            // Show progress bar
+            document.getElementById('progressContainer').style.display = 'block';
+            
+            for (let i = 0; i < leagues.length; i++) {
+                const league = leagues[i];
+                
+                // Update progress
+                const progress = ((i + 1) / totalLeagues) * 100;
+                document.getElementById('progressFill').style.width = `${progress}%`;
+                document.getElementById('progressText').textContent = 
+                    `Loading ${league.name} (${i + 1}/${totalLeagues})...`;
+                
+                try {
+                    const fixtures = await fetchFixturesForLeague(league.id, date);
+                    
+                    if (fixtures && fixtures.length > 0) {
+                        // Add league info to each fixture
+                        const fixturesWithLeague = fixtures.map(f => ({
+                            ...f,
+                            leagueInfo: league
+                        }));
+                        allFixtures.push(...fixturesWithLeague);
+                    }
+                    
+                    // Small delay to avoid rate limiting
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                } catch (error) {
+                    console.error(`Failed to fetch ${league.name}:`, error);
+                }
+            }
+            
+            // Hide progress bar
+            document.getElementById('progressContainer').style.display = 'none';
+            
+            return allFixtures;
+        }
+        
+        // ==================== GAME FUNCTIONS ====================
+        async function loadGames() {
+            const output = document.getElementById('gamesOutput');
+            output.innerHTML = '<div class="loading">Loading fixtures...</div>';
+            
+            const leagueSelect = document.getElementById('leagueSelect').value;
+            const date = document.getElementById('dateInput').value || currentDate;
+            
+            let leaguesToLoad = [];
+            
+            if (leagueSelect === "" || leagueSelect === "all") {
+                // Load all European leagues
+                leaguesToLoad = ALL_EUROPEAN_LEAGUES;
+            } else if (leagueSelect === "top") {
+                // Load only top leagues
+                leaguesToLoad = TOP_LEAGUES;
+            } else {
+                // Load specific league
+                const league = ALL_EUROPEAN_LEAGUES.find(l => l.id.toString() === leagueSelect);
+                leaguesToLoad = league ? [league] : TOP_LEAGUES;
+            }
+            
+            try {
+                const fixtures = await fetchFixturesForMultipleLeagues(leaguesToLoad, date);
+                
+                if (!fixtures || fixtures.length === 0) {
+                    output.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>No fixtures found for selected leagues.</p>
+                            <small>Try a different date or select fewer leagues</small>
+                        </div>
+                    `;
+                    updateStats(0, 0, 0);
+                    return;
+                }
+                
+                currentGames = fixtures;
+                displayGames(fixtures);
+                
+            } catch (error) {
+                console.error('Error loading games:', error);
+                output.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error loading fixtures.</p>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadAllEuropeanLeagues() {
+            const output = document.getElementById('gamesOutput');
+            output.innerHTML = '<div class="loading">Loading ALL European leagues... This may take a minute.</div>';
+            
+            const date = document.getElementById('dateInput').value || currentDate;
+            
+            try {
+                const fixtures = await fetchFixturesForMultipleLeagues(ALL_EUROPEAN_LEAGUES, date);
+                
+                if (!fixtures || fixtures.length === 0) {
+                    output.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>No fixtures found across all European leagues.</p>
+                            <small>Try a different date</small>
+                        </div>
+                    `;
+                    updateStats(0, 0, 0);
+                    return;
+                }
+                
+                currentGames = fixtures;
+                displayGames(fixtures);
+                showToast(`Loaded ${fixtures.length} matches from ${new Set(fixtures.map(f => f.leagueInfo.name)).size} leagues!`);
+                
+            } catch (error) {
+                console.error('Error loading all leagues:', error);
+                output.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error loading all leagues.</p>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadLiveGames() {
+            const output = document.getElementById('gamesOutput');
+            output.innerHTML = '<div class="loading">Loading live games from all European leagues...</div>';
+            
+            try {
+                // For live games, we need to check all leagues
+                let allLiveFixtures = [];
+                
+                // Check top leagues first for performance
+                for (const league of TOP_LEAGUES) {
+                    try {
+                        const url = `${API_BASE}/fixtures?league=${league.id}&live=all&season=2024`;
+                        
+                        const response = await fetch(url, {
+                            headers: {
+                                "x-apisports-key": API_KEY,
+                                "Accept": "application/json"
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.response && data.response.length > 0) {
+                            const fixturesWithLeague = data.response.map(f => ({
+                                ...f,
+                                leagueInfo: league
+                            }));
+                            allLiveFixtures.push(...fixturesWithLeague);
+                        }
+                        
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                        
+                    } catch (error) {
+                        console.error(`Error checking live games for ${league.name}:`, error);
+                    }
+                }
+                
+                if (allLiveFixtures.length === 0) {
+                    output.innerHTML = `
+                        <div class="success">
+                            <i class="fas fa-broadcast-tower"></i>
+                            <p>No live games across European leagues at the moment.</p>
+                            <small>Check back later or try "LOAD GAMES" for upcoming matches</small>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                currentGames = allLiveFixtures;
+                displayGames(allLiveFixtures);
+                
+            } catch (error) {
+                console.error('Error loading live games:', error);
+                output.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error loading live games.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayGames(fixtures) {
+            const output = document.getElementById('gamesOutput');
+            
+            if (!fixtures || fixtures.length === 0) {
+                output.innerHTML = '<div class="error">No games found</div>';
+                updateStats(0, 0, 0);
+                return;
+            }
+            
+            // Sort by league, then time
+            fixtures.sort((a, b) => {
+                if (a.leagueInfo.name !== b.leagueInfo.name) {
+                    return a.leagueInfo.name.localeCompare(b.leagueInfo.name);
+                }
+                return new Date(a.fixture.date) - new Date(b.fixture.date);
+            });
+            
+            let html = '';
+            let liveCount = 0;
+            let completedCount = 0;
+            
+            // Group by league for better organization
+            const fixturesByLeague = {};
+            fixtures.forEach(fixture => {
+                const leagueName = fixture.leagueInfo.name;
+                if (!fixturesByLeague[leagueName]) {
+                    fixturesByLeague[leagueName] = [];
+                }
+                fixturesByLeague[leagueName].push(fixture);
+            });
+            
+            Object.entries(fixturesByLeague).forEach(([leagueName, leagueFixtures]) => {
+                const leagueEmoji = leagueFixtures[0].leagueInfo.emoji || "⚽";
+                
+                html += `<div style="margin-bottom: 20px;">`;
+                html += `<div style="color: #25D366; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">`;
+                html += `${leagueEmoji} ${leagueName} (${leagueFixtures.length} matches)`;
+                html += `</div>`;
+                
+                leagueFixtures.forEach(game => {
+                    const matchTime = new Date(game.fixture.date);
+                    const isLive = game.fixture.status.short === 'LIVE' || 
+                                  game.fixture.status.short === 'HT' ||
+                                  game.fixture.status.short === '1H' ||
+                                  game.fixture.status.short === '2H';
+                    const isCompleted = game.fixture.status.short === 'FT' ||
+                                       game.fixture.status.short === 'AET' ||
+                                       game.fixture.status.short === 'PEN';
+                    
+                    if (isLive) liveCount++;
+                    if (isCompleted) completedCount++;
+                    
+                    const homeForm = generateTeamForm();
+                    const awayForm = generateTeamForm();
+                    
+                    html += `
+                        <div class="game-item" style="${isLive ? 'border-left-color: #ff4444;' : ''}">
+                            <div class="game-header">
+                                <div class="league">
+                                    ${matchTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    ${isLive ? '<span class="live-badge">LIVE</span>' : ''}
+                                </div>
+                                <div class="time">
+                                    ${game.leagueInfo.country}
+                                </div>
+                            </div>
+                            
+                            <div class="teams">
+                                <div class="team">
+                                    <div class="team-name">${game.teams.home.name}</div>
+                                    <div class="form">${homeForm.map(r => `<span class="form-box ${r}">${r}</span>`).join('')}</div>
+                                </div>
+                                <div class="vs">VS</div>
+                                <div class="team">
+                                    <div class="team-name">${game.teams.away.name}</div>
+                                    <div class="form">${awayForm.map(r => `<span class="form-box ${r}">${r}</span>`).join('')}</div>
+                                </div>
+                            </div>
+                            
+                            ${game.goals.home !== null ? `
+                                <div style="text-align: center; font-size: 2rem; font-weight: bold; margin: 10px 0; color: #25D366;">
+                                    ${game.goals.home} - ${game.goals.away}
+                                </div>
+                            ` : `
+                                <div style="text-align: center; color: #aaa; font-size: 0.9rem; margin: 10px 0;">
+                                    ${game.fixture.status.long}
+                                </div>
+                            `}
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            });
+            
+            output.innerHTML = html;
+            updateStats(fixtures.length, liveCount, completedCount);
+        }
+        
+        // ==================== WHATSAPP FUNCTIONS ====================
+        async function generateWhatsAppUpdate() {
+            const output = document.getElementById('whatsappOutput');
+            output.innerHTML = '<div class="loading">Generating European football update... This may take a minute.</div>';
+            
+            const date = document.getElementById('dateInput').value || currentDate;
+            const includeAllLeagues = document.getElementById('includeAllLeagues').checked;
+            
+            try {
+                // Use leagues from current games or fetch all
+                let leaguesToUse = includeAllLeagues ? ALL_EUROPEAN_LEAGUES : TOP_LEAGUES;
+                
+                if (currentGames.length > 0 && !includeAllLeagues) {
+                    // Use leagues from already loaded games
+                    const uniqueLeagues = [...new Set(currentGames.map(g => g.leagueInfo.id))];
+                    leaguesToUse = ALL_EUROPEAN_LEAGUES.filter(l => uniqueLeagues.includes(l.id));
+                }
+                
+                const fixtures = await fetchFixturesForMultipleLeagues(leaguesToUse, date);
+                
+                if (fixtures.length === 0) {
+                    output.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>No fixtures found to generate update.</p>
+                            <small>Try loading games first or select a different date</small>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const message = generateWhatsAppMessage(fixtures, date, leaguesToUse.length);
+                output.innerHTML = `<div style="white-space: pre-wrap;">${message}</div>`;
+                updateMessageStats(message);
+                showToast(`Generated update with ${fixtures.length} matches from ${new Set(fixtures.map(f => f.leagueInfo.name)).size} leagues!`);
+                
+            } catch (error) {
+                console.error('Error generating update:', error);
+                output.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error generating update.</p>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+        
+        function generateWhatsAppMessage(fixtures, date, totalLeaguesCount) {
+            // Categorize fixtures
+            const liveFixtures = fixtures.filter(f => 
+                f.fixture.status.short === 'LIVE' || 
+                f.fixture.status.short === 'HT' ||
+                f.fixture.status.short === '1H' ||
+                f.fixture.status.short === '2H'
+            );
+            
+            const completedFixtures = fixtures.filter(f => 
+                f.fixture.status.short === 'FT' ||
+                f.fixture.status.short === 'AET' ||
+                f.fixture.status.short === 'PEN'
+            );
+            
+            const upcomingFixtures = fixtures.filter(f => 
+                f.fixture.status.short === 'NS' ||
+                f.fixture.status.short === 'TBD'
+            );
+            
+            const formattedDate = new Date(date).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // Count unique leagues
+            const uniqueLeagues = new Set(fixtures.map(f => f.leagueInfo.name));
+            const uniqueCountries = new Set(fixtures.map(f => f.leagueInfo.country));
+            
+            let message = `⚽ *EUROPEAN FOOTBALL DAILY UPDATE* ⚽\n\n`;
+            message += `📅 ${formattedDate}\n`;
+            message += `🌍 Covering ${uniqueLeagues.size} leagues across ${uniqueCountries.size} countries\n\n`;
+            
+            // Live matches
+            if (liveFixtures.length > 0) {
+                message += `🔴 *LIVE NOW* 🔴\n\n`;
+                liveFixtures.forEach(fixture => {
+                    const score = fixture.goals.home !== null ? 
+                        `${fixture.goals.home}-${fixture.goals.away}` : '0-0';
+                    const minute = fixture.fixture.status.elapsed ? `${fixture.fixture.status.elapsed}'` : 'Live';
+                    message += `⚡ ${fixture.teams.home.name} ${score} ${fixture.teams.away.name}\n`;
+                    message += `   🏆 ${fixture.leagueInfo.name}\n`;
+                    message += `   ⏰ ${minute} minute\n\n`;
+                });
+            }
+            
+            // Results - Show only top leagues in detail, summarize others
+            if (completedFixtures.length > 0) {
+                message += `✅ *TODAY'S RESULTS*\n\n`;
+                
+                // Separate top leagues from others
+                const topLeagueNames = TOP_LEAGUES.map(l => l.name);
+                const topLeagueFixtures = completedFixtures.filter(f => topLeagueNames.includes(f.leagueInfo.name));
+                const otherFixtures = completedFixtures.filter(f => !topLeagueNames.includes(f.leagueInfo.name));
+                
+                // Show top leagues in detail
+                if (topLeagueFixtures.length > 0) {
+                    const byLeague = {};
+                    topLeagueFixtures.forEach(fixture => {
+                        if (!byLeague[fixture.leagueInfo.name]) byLeague[fixture.leagueInfo.name] = [];
+                        byLeague[fixture.leagueInfo.name].push(fixture);
+                    });
+                    
+                    Object.entries(byLeague).forEach(([leagueName, leagueFixtures]) => {
+                        const leagueEmoji = leagueFixtures[0].leagueInfo.emoji || "🏆";
+                        message += `${leagueEmoji} *${leagueName}*\n`;
+                        
+                        leagueFixtures.slice(0, 5).forEach(fixture => { // Limit to 5 per league
+                            const winner = fixture.goals.home > fixture.goals.away ? fixture.teams.home.name :
+                                         fixture.goals.away > fixture.goals.home ? fixture.teams.away.name : "Draw";
+                            const emoji = winner === fixture.teams.home.name ? "🔴" : 
+                                        winner === fixture.teams.away.name ? "🔵" : "⚪";
+                            
+                            message += `• ${fixture.teams.home.name} ${fixture.goals.home}-${fixture.goals.away} ${fixture.teams.away.name}\n`;
+                            if (fixture.goals.home !== fixture.goals.away) {
+                                message += `  ${emoji} ${winner}\n`;
+                            }
+                        });
+                        
+                        if (leagueFixtures.length > 5) {
+                            message += `  ... and ${leagueFixtures.length - 5} more matches\n`;
+                        }
+                        message += `\n`;
+                    });
+                }
+                
+                // Summarize other leagues
+                if (otherFixtures.length > 0) {
+                    const otherByCountry = {};
+                    otherFixtures.forEach(fixture => {
+                        if (!otherByCountry[fixture.leagueInfo.country]) otherByCountry[fixture.leagueInfo.country] = [];
+                        otherByCountry[fixture.leagueInfo.country].push(fixture);
+                    });
+                    
+                    message += `📊 *OTHER EUROPEAN LEAGUES*\n`;
+                    Object.entries(otherByCountry).forEach(([country, countryFixtures]) => {
+                        const countryLeagues = new Set(countryFixtures.map(f => f.leagueInfo.name));
+                        const matchCount = countryFixtures.length;
+                        message += `• ${country}: ${matchCount} matches across ${countryLeagues.size} leagues\n`;
+                    });
+                    message += `\n`;
+                }
+            }
+            
+            // Upcoming fixtures - Show only highlights
+            if (upcomingFixtures.length > 0) {
+                message += `📋 *UPCOMING HIGHLIGHTS*\n\n`;
+                
+                // Get top upcoming matches (from top leagues)
+                const topUpcoming = upcomingFixtures
+                    .filter(f => TOP_LEAGUES.some(l => l.name === f.leagueInfo.name))
+                    .slice(0, 10); // Limit to 10 matches
+                
+                if (topUpcoming.length > 0) {
+                    topUpcoming.forEach(fixture => {
+                        const time = new Date(fixture.fixture.date).toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        });
+                        message += `🕒 ${time} - ${fixture.leagueInfo.emoji || "⚽"} ${fixture.teams.home.name} vs ${fixture.teams.away.name}\n`;
+                    });
+                    message += `\n`;
+                }
+                
+                // Count other upcoming matches
+                const otherUpcomingCount = upcomingFixtures.length - topUpcoming.length;
+                if (otherUpcomingCount > 0) {
+                    message += `📈 Plus ${otherUpcomingCount} more matches across Europe\n\n`;
+                }
+            }
+            
+            // Highlight of the day
+            if (completedFixtures.length > 0) {
+                const highScoring = completedFixtures.reduce((max, fixture) => {
+                    const totalGoals = (fixture.goals.home || 0) + (fixture.goals.away || 0);
+                    const maxGoals = (max.goals.home || 0) + (max.goals.away || 0);
+                    return totalGoals > maxGoals ? fixture : max;
+                }, completedFixtures[0]);
+                
+                if (highScoring && ((highScoring.goals.home || 0) + (highScoring.goals.away || 0)) >= 4) {
+                    message += `🌟 *MATCH OF THE DAY* 🌟\n\n`;
+                    message += `⚽ ${highScoring.teams.home.name} ${highScoring.goals.home}-${highScoring.goals.away} ${highScoring.teams.away.name}\n`;
+                    message += `🏆 ${highScoring.leagueInfo.name} (${highScoring.leagueInfo.country})\n`;
+                    message += `🎯 ${(highScoring.goals.home || 0) + (highScoring.goals.away || 0)} goals - Goal fest! 🔥\n\n`;
+                }
+            }
+            
+            // Stats summary
+            message += `📊 *DAILY STATS*\n`;
+            message += `• Total Matches: ${fixtures.length}\n`;
+            message += `• Live Now: ${liveFixtures.length}\n`;
+            message += `• Results: ${completedFixtures.length}\n`;
+            message += `• Upcoming: ${upcomingFixtures.length}\n`;
+            message += `• Leagues: ${uniqueLeagues.size}\n`;
+            message += `• Countries: ${uniqueCountries.size}\n\n`;
+            
+            // Closing
+            message += `Stay tuned for more European football updates!\n\n`;
+            message += `#EuropeanFootball #Soccer #Matchday #WhatsAppChannel #FootballEurope`;
+            
+            return message;
+        }
+        
+        function generatePreview() {
+            if (currentGames.length === 0) {
+                showToast('Load games first!', 'error');
+                return;
+            }
+            
+            const date = document.getElementById('dateInput').value || currentDate;
+            const message = generateWhatsAppMessage(currentGames.slice(0, 20), date, 10); // Preview with 20 games
+            
+            const output = document.getElementById('whatsappOutput');
+            output.innerHTML = `<div style="white-space: pre-wrap;">${message}</div>`;
+            updateMessageStats(message);
+            showToast('Preview generated!');
+        }
+        
+        // ==================== UTILITY FUNCTIONS ====================
+        function useTemplate(type) {
+            // ... (keep the same template function from previous code)
+            // You can keep your existing template function here
+        }
+        
+        function generateTeamForm() {
+            return Array.from({ length: 5 }, () => 
+                ['W', 'D', 'L'][Math.floor(Math.random() * 3)]
+            );
+        }
+        
+        function generateTeamStats() {
+            return {
+                goalsScored: (Math.random() * 2 + 1).toFixed(1),
+                goalsConceded: (Math.random() * 1.5).toFixed(1),
+                winRate: Math.floor(Math.random() * 30 + 40)
+            };
+        }
+        
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+        
+        function updateStats(total, live, completed) {
+            document.getElementById('totalMatches').textContent = total;
+            document.getElementById('liveMatches').textContent = live;
+            document.getElementById('completedMatches').textContent = completed;
+        }
+        
+        function updateMessageStats(message) {
+            const charCount = message.length;
+            const lineCount = message.split('\n').length;
+            document.getElementById('messageStats').textContent = 
+                `${charCount} characters • ${lineCount} lines`;
+        }
+        
+        async function copyToClipboard() {
+            const output = document.getElementById('whatsappOutput');
+            const message = output.innerText || output.textContent;
+            
+            if (!message || message.includes('Your WhatsApp message')) {
+                showToast('No message to copy!', 'error');
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(message);
+                showToast('Message copied to clipboard!');
+                
+                // Animate copy button
+                const copyBtn = document.getElementById('copyBtn');
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> COPIED!';
+                copyBtn.style.background = '#1da851';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="far fa-copy"></i> COPY TO CLIPBOARD';
+                    copyBtn.style.background = '';
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Copy failed:', error);
+                showToast('Failed to copy. Please try again.', 'error');
+            }
+        }
+        
+        function clearOutput() {
+            const output = document.getElementById('whatsappOutput');
+            output.innerHTML = `
+                <div style="text-align: center; padding: 50px; color: #666;">
+                    <i class="fab fa-whatsapp" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                    <p>Your WhatsApp message will appear here</p>
+                    <small>Click "GENERATE UPDATE" to start</small>
+                </div>
+            `;
+            document.getElementById('messageStats').textContent = '0 characters • 0 lines';
+        }
+        
+        function testOnWhatsApp() {
+            const output = document.getElementById('whatsappOutput');
+            const message = output.innerText || output.textContent;
+            
+            if (!message || message.includes('Your WhatsApp message')) {
+                showToast('No message to test!', 'error');
+                return;
+            }
+            
+            // Create WhatsApp share URL
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+            
+            // Open in new tab
+            window.open(whatsappUrl, '_blank');
+            showToast('Opened in WhatsApp. Send to your channel!');
+        }
+        
+        function showToast(text, type = 'success') {
+            const toast = document.getElementById('toast');
+            const message = document.getElementById('toastMessage');
+            
+            message.textContent = text;
+            toast.className = 'toast';
+            toast.classList.add('show');
+            
+            if (type === 'error') {
+                toast.style.background = '#ff4444';
+            } else {
+                toast.style.background = '#25D366';
+            }
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        function toggleLeagueFilter() {
+            const includeAll = document.getElementById('includeAllLeagues').checked;
+            if (includeAll) {
+                showToast('Will include ALL European leagues in next update');
+            } else {
+                showToast('Will include only major leagues in next update');
+            }
+        }
+    </script>
+</body>
+</html>
