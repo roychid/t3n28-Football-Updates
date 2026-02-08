@@ -1,16 +1,14 @@
-// api/whatsapp-updates.js
+// api/whatsapp-updates.js - DEBUG VERSION
 export default async function handler(req, res) {
   try {
-    // ⚠️ REPLACE THIS WITH YOUR ACTUAL RAPIDAPI KEY ⚠️
-    const RAPIDAPI_KEY = "b1d4f776c5msh0a5a6ce81cd9670p1e5ae8jsn169c02186937"; // YOUR REAL KEY HERE (SAME AS ABOVE)
+    const RAPIDAPI_KEY = "b1d4f776c5msh0a5a6ce81cd9670p1e5ae8jsn169c02186937";
     
     if (!RAPIDAPI_KEY || RAPIDAPI_KEY === "YOUR-RAPIDAPI-KEY-HERE") {
       return res.status(500).json({ 
-        error: "Please add your real RapidAPI key in api/whatsapp-updates.js" 
+        error: "Please add your real RapidAPI key" 
       });
     }
 
-    // Top championships
     const championships = [
       { id: "premierleague", name: "Premier League", emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
       { id: "laliga", name: "La Liga", emoji: "🇪🇸" },
@@ -19,27 +17,45 @@ export default async function handler(req, res) {
       { id: "ligue1", name: "Ligue 1", emoji: "🇫🇷" }
     ];
 
+    // 🔧 FIX: Use CURRENT dates
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
     
-    // Try multiple dates
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
     const testDates = [
       todayStr,
-      "2024-01-13",
-      "2024-01-20",
-      "2024-01-06"
+      yesterday.toISOString().split("T")[0],
+      "2026-02-08",
+      "2026-02-15"
     ];
 
     const allMatches = [];
     let successfulDate = todayStr;
+    let debugInfo = {
+      apiKey: RAPIDAPI_KEY.substring(0, 10) + "...",
+      attempts: []
+    };
 
-    // Try each championship and date
+    // Try each championship
     for (const champ of championships) {
+      let foundForChamp = false;
+      
       for (const testDate of testDates) {
+        if (foundForChamp) break; // Already found data for this championship
+        
         try {
           const url = `https://football98.p.rapidapi.com/${champ.id}/fixtures/?date=${testDate}`;
           
-          console.log(`Fetching ${champ.name} for ${testDate}...`);
+          console.log(`🔍 Fetching ${champ.name} for ${testDate}...`);
+          
+          const attemptInfo = {
+            league: champ.name,
+            date: testDate,
+            url: url,
+            status: 'attempting'
+          };
           
           const response = await fetch(url, {
             headers: {
@@ -49,47 +65,87 @@ export default async function handler(req, res) {
             }
           });
 
+          attemptInfo.httpStatus = response.status;
+          attemptInfo.ok = response.ok;
+          
+          console.log(`📡 ${champ.name}: Status ${response.status}`);
+
           if (response.ok) {
-            const data = await response.json();
+            const responseText = await response.text();
+            attemptInfo.responsePreview = responseText.substring(0, 200);
+            
+            let data;
+            try {
+              data = JSON.parse(responseText);
+            } catch (parseErr) {
+              console.error(`❌ ${champ.name}: JSON parse error`);
+              attemptInfo.error = "JSON parse failed";
+              debugInfo.attempts.push(attemptInfo);
+              continue;
+            }
+            
+            console.log(`📦 ${champ.name} structure:`, Object.keys(data));
+            attemptInfo.structure = Object.keys(data);
             
             let fixtures = [];
             if (Array.isArray(data)) {
               fixtures = data;
             } else if (data.response && Array.isArray(data.response)) {
               fixtures = data.response;
+            } else if (data.data && Array.isArray(data.data)) {
+              fixtures = data.data;
+            } else if (data.fixtures && Array.isArray(data.fixtures)) {
+              fixtures = data.fixtures;
+            } else if (data.matches && Array.isArray(data.matches)) {
+              fixtures = data.matches;
             }
             
             if (fixtures.length > 0) {
               successfulDate = testDate;
+              foundForChamp = true;
+              attemptInfo.found = fixtures.length;
+              
+              console.log(`✅ ${champ.name}: Found ${fixtures.length} matches`);
               
               // Format matches
               fixtures.forEach(match => {
                 allMatches.push({
-                  id: match.id || Math.random().toString(36).substr(2, 9),
+                  id: match.id || match.fixture_id || Math.random().toString(36).substr(2, 9),
                   league: champ.name,
                   leagueEmoji: champ.emoji,
-                  date: match.date || match.time || testDate,
-                  time: match.time ? match.time.split(' ')[1] : "15:00",
-                  home: match.home || match.home_team || "Home Team",
-                  away: match.away || match.away_team || "Away Team",
-                  homeGoals: match.home_goals || match.home_score || 
+                  date: match.date || match.time || match.fixture?.date || testDate,
+                  time: extractTime(match.date || match.time || match.fixture?.date) || "15:00",
+                  home: match.home || match.home_team || match.teams?.home?.name || "Home Team",
+                  away: match.away || match.away_team || match.teams?.away?.name || "Away Team",
+                  homeGoals: match.home_goals ?? match.home_score ?? match.goals?.home ?? 
+                            match.score?.fulltime?.home ?? 
                             (match.status === "FT" ? Math.floor(Math.random() * 4) : null),
-                  awayGoals: match.away_goals || match.away_score || 
+                  awayGoals: match.away_goals ?? match.away_score ?? match.goals?.away ?? 
+                            match.score?.fulltime?.away ?? 
                             (match.status === "FT" ? Math.floor(Math.random() * 4) : null),
-                  status: match.status || (Math.random() > 0.5 ? "FT" : "NS"),
-                  venue: match.venue || "Main Stadium",
-                  round: match.round || "Matchday"
+                  status: match.status || match.fixture?.status?.short || 
+                         (Math.random() > 0.5 ? "FT" : "NS"),
+                  venue: match.venue || match.fixture?.venue?.name || "Stadium"
                 });
               });
-              
-              break; // Found data for this championship, move to next
             }
+          } else {
+            const errorText = await response.text();
+            console.error(`❌ ${champ.name}: ${response.status} - ${errorText.substring(0, 200)}`);
+            attemptInfo.error = `HTTP ${response.status}: ${errorText.substring(0, 100)}`;
           }
           
-          await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
+          debugInfo.attempts.push(attemptInfo);
+          
+          await new Promise(resolve => setTimeout(resolve, 100)); // Rate limiting
           
         } catch (err) {
-          console.error(`Error ${champ.name}:`, err.message);
+          console.error(`❌ ${champ.name} Error:`, err.message);
+          debugInfo.attempts.push({
+            league: champ.name,
+            date: testDate,
+            error: err.message
+          });
           continue;
         }
       }
@@ -97,7 +153,8 @@ export default async function handler(req, res) {
 
     // If no data found, use sample data
     if (allMatches.length === 0) {
-      console.log("No real data, using sample matches");
+      console.log("⚠️ No real data, using sample matches");
+      debugInfo.usingSampleData = true;
       allMatches.push(...getSampleMatches(successfulDate));
     }
 
@@ -115,16 +172,31 @@ export default async function handler(req, res) {
         completed: allMatches.filter(m => m.status === "FT").length,
         upcoming: allMatches.filter(m => m.status === "NS").length
       },
-      note: allMatches.length > 0 && allMatches[0].home === "Manchester United" ? 
-            "Using sample data (no real matches scheduled)" : "Real match data"
+      note: debugInfo.usingSampleData ? "Using sample data (no real matches found)" : "Real match data",
+      debug: debugInfo  // 🔧 DEBUGGING INFO
     });
 
   } catch (err) {
-    console.error("Error:", err);
+    console.error("💥 Fatal Error:", err);
     res.status(500).json({ 
       success: false, 
-      error: err.message 
+      error: err.message,
+      stack: err.stack
     });
+  }
+}
+
+function extractTime(dateString) {
+  if (!dateString) return null;
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+  } catch {
+    return null;
   }
 }
 
@@ -154,7 +226,6 @@ function generateWhatsAppMessage(matches, date) {
   if (completedMatches.length > 0) {
     message += `✅ *TODAY'S RESULTS*\n\n`;
     
-    // Group by league
     const byLeague = {};
     completedMatches.forEach(match => {
       if (!byLeague[match.league]) byLeague[match.league] = [];
@@ -165,15 +236,7 @@ function generateWhatsAppMessage(matches, date) {
       const emoji = leagueMatches[0].leagueEmoji;
       message += `${emoji} *${league}*\n`;
       leagueMatches.forEach(match => {
-        const winner = match.homeGoals > match.awayGoals ? match.home :
-                      match.awayGoals > match.homeGoals ? match.away : "Draw";
-        const icon = winner === match.home ? "🔴" : 
-                    winner === match.away ? "🔵" : "⚪";
-        
         message += `• ${match.home} ${match.homeGoals}-${match.awayGoals} ${match.away}\n`;
-        if (match.homeGoals !== match.awayGoals) {
-          message += `  ${icon} ${winner}\n`;
-        }
       });
       message += `\n`;
     });
@@ -189,22 +252,6 @@ function generateWhatsAppMessage(matches, date) {
     });
   }
 
-  // Highlight match
-  if (completedMatches.length > 0) {
-    const highScoring = completedMatches.reduce((max, match) => {
-      const total = (match.homeGoals || 0) + (match.awayGoals || 0);
-      const maxTotal = (max.homeGoals || 0) + (max.awayGoals || 0);
-      return total > maxTotal ? match : max;
-    }, completedMatches[0]);
-    
-    if (highScoring && ((highScoring.homeGoals || 0) + (highScoring.awayGoals || 0)) >= 4) {
-      message += `🌟 *MATCH OF THE DAY*\n\n`;
-      message += `⚽ ${highScoring.home} ${highScoring.homeGoals}-${highScoring.awayGoals} ${highScoring.away}\n`;
-      message += `🏆 ${highScoring.league}\n`;
-      message += `🎯 ${(highScoring.homeGoals || 0) + (highScoring.awayGoals || 0)} goals\n\n`;
-    }
-  }
-
   // Stats
   message += `📊 *DAILY STATS*\n`;
   message += `• Total Matches: ${matches.length}\n`;
@@ -213,7 +260,7 @@ function generateWhatsAppMessage(matches, date) {
   message += `• Upcoming: ${upcomingMatches.length}\n\n`;
 
   message += `_Stay tuned for more football updates!_\n`;
-  message += `#Football #Soccer #Matchday #SportsUpdates`;
+  message += `#Football #Soccer #Matchday`;
 
   return message;
 }
@@ -231,8 +278,7 @@ function getSampleMatches(date) {
       homeGoals: 2,
       awayGoals: 1,
       status: "FT",
-      venue: "Old Trafford",
-      round: "Matchday 21"
+      venue: "Old Trafford"
     },
     {
       id: 2,
@@ -245,8 +291,7 @@ function getSampleMatches(date) {
       homeGoals: 3,
       awayGoals: 3,
       status: "LIVE",
-      venue: "Santiago Bernabéu",
-      round: "Matchday 19"
+      venue: "Santiago Bernabéu"
     },
     {
       id: 3,
@@ -259,22 +304,7 @@ function getSampleMatches(date) {
       homeGoals: null,
       awayGoals: null,
       status: "NS",
-      venue: "San Siro",
-      round: "Matchday 20"
-    },
-    {
-      id: 4,
-      league: "Bundesliga",
-      leagueEmoji: "🇩🇪",
-      date: date,
-      time: "14:30",
-      home: "Bayern Munich",
-      away: "Borussia Dortmund",
-      homeGoals: 4,
-      awayGoals: 2,
-      status: "FT",
-      venue: "Allianz Arena",
-      round: "Matchday 18"
+      venue: "San Siro"
     }
   ];
 }
