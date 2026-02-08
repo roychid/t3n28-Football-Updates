@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Football UPATES FOR CHANNELS - ALL European Leagues</title>
+    <title>Football Updates for WhatsApp Channels</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Reset & Base */
@@ -16,7 +16,7 @@
             padding: 20px;
         }
         
-        .container { max-width: 1400px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
         
         /* Header */
         header {
@@ -50,7 +50,7 @@
             margin-bottom: 40px;
         }
         
-        @media (max-width: 1100px) {
+        @media (max-width: 900px) {
             .main-grid { grid-template-columns: 1fr; }
         }
         
@@ -116,7 +116,6 @@
             align-items: center;
             gap: 8px;
             transition: all 0.3s;
-            flex: 1;
         }
         
         .btn-primary {
@@ -139,22 +138,18 @@
             background: rgba(37, 211, 102, 0.1);
         }
         
-        .btn-small {
-            padding: 8px 15px;
-            font-size: 0.9rem;
-        }
-        
         /* Games List */
         .games-list {
-            max-height: 600px;
+            max-height: 500px;
             overflow-y: auto;
             padding-right: 10px;
+            margin-top: 10px;
         }
         
         .game-item {
             background: rgba(40, 40, 40, 0.8);
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px;
             margin-bottom: 15px;
             border-left: 4px solid #25D366;
         }
@@ -162,19 +157,30 @@
         .game-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             padding-bottom: 10px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .league { color: #25D366; font-weight: bold; font-size: 0.9rem; }
-        .time { color: #aaa; font-size: 0.9rem; }
+        .league { 
+            color: #25D366; 
+            font-weight: bold; 
+            font-size: 0.9rem; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .time { 
+            color: #aaa; 
+            font-size: 0.9rem; 
+        }
         
         .teams {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin: 15px 0;
         }
         
         .team {
@@ -183,66 +189,36 @@
         }
         
         .team-name {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .vs {
-            font-size: 1.5rem;
-            color: #666;
-            font-weight: bold;
-            padding: 0 20px;
-        }
-        
-        .form {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-        }
-        
-        .form-box {
-            width: 22px;
-            height: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: bold;
-            border-radius: 3px;
-        }
-        
-        .form-box.W { background: #25D366; color: black; }
-        .form-box.D { background: #666; color: white; }
-        .form-box.L { background: #ff4444; color: white; }
-        
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .stat-item {
-            background: rgba(20, 20, 20, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-        }
-        
-        .stat-label {
-            font-size: 0.8rem;
-            color: #aaa;
             margin-bottom: 5px;
         }
         
-        .stat-value {
-            font-size: 1.1rem;
+        .vs {
+            font-size: 1.2rem;
+            color: #666;
             font-weight: bold;
+            padding: 0 15px;
         }
         
-        /* WhatsApp Generator */
+        /* Live Badge */
+        .live-badge {
+            background: #ff4444;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        /* WhatsApp Output */
         .whatsapp-output {
             background: #000;
             border-radius: 10px;
@@ -251,58 +227,17 @@
             max-height: 500px;
             overflow-y: auto;
             white-space: pre-wrap;
-            font-family: 'Segoe UI', monospace;
-            font-size: 15px;
-            line-height: 1.6;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
             border: 2px solid #25D366;
-            margin-bottom: 20px;
+            margin: 15px 0;
         }
         
         .output-actions {
             display: flex;
             gap: 10px;
             margin-top: 15px;
-        }
-        
-        .btn-copy {
-            background: #25D366;
-            color: white;
-            flex: 2;
-        }
-        
-        .btn-clear {
-            background: #ff4444;
-            color: white;
-            flex: 1;
-        }
-        
-        .btn-test {
-            background: #075E54;
-            color: white;
-            flex: 1;
-        }
-        
-        /* Template Buttons */
-        .templates {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-        }
-        
-        .template-btn {
-            background: rgba(255, 255, 255, 0.05);
-            color: #25D366;
-            border: 1px solid rgba(37, 211, 102, 0.3);
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .template-btn:hover {
-            background: rgba(37, 211, 102, 0.1);
-            border-color: #25D366;
         }
         
         /* Stats */
@@ -338,7 +273,7 @@
             color: #aaa;
         }
         
-        /* Loading & Error States */
+        /* Loading & Error */
         .loading {
             text-align: center;
             padding: 40px;
@@ -348,8 +283,8 @@
         .loading:after {
             content: '';
             display: inline-block;
-            width: 30px;
-            height: 30px;
+            width: 20px;
+            height: 20px;
             border: 3px solid rgba(37, 211, 102, 0.3);
             border-top-color: #25D366;
             border-radius: 50%;
@@ -422,92 +357,32 @@
             background: #1da851;
         }
         
-        /* Live Badge */
-        .live-badge {
-            background: #ff4444;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-        
         /* API Status */
         .api-status {
             position: absolute;
-            top: 0;
-            right: 0;
+            top: 20px;
+            right: 20px;
             background: rgba(255,255,255,0.1);
             padding: 5px 15px;
             border-radius: 20px;
             font-size: 12px;
         }
         
-        /* League Filter */
-        .league-filter {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 15px 0;
-            max-height: 150px;
-            overflow-y: auto;
-            padding: 10px;
-            background: rgba(20, 20, 20, 0.5);
-            border-radius: 8px;
-        }
-        
-        .league-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.9rem;
-        }
-        
-        .league-checkbox input {
-            accent-color: #25D366;
-        }
-        
-        /* Progress Bar */
-        .progress-container {
-            margin: 15px 0;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: #25D366;
-            width: 0%;
-            transition: width 0.3s;
-        }
-        
-        .progress-text {
+        /* Message Stats */
+        .message-stats {
             text-align: center;
+            margin-top: 10px;
+            color: #888;
             font-size: 0.9rem;
-            color: #aaa;
-            margin-top: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-futbol"></i> t3n28-FOOTBALL MANAGER</h1>
-            <p class="subtitle">ALL European Leagues • Channel Updates</p>
-            <div class="api-status" id="apiStatus">API: 🔄 Testing...</div>
+            <h1><i class="fas fa-futbol"></i> Football Updates Manager</h1>
+            <p class="subtitle">Generate WhatsApp updates for football matches</p>
+            <div class="api-status" id="apiStatus">API: Ready</div>
         </header>
         
         <div class="main-grid">
@@ -520,71 +395,53 @@
                         <div class="input-group">
                             <input type="date" id="dateInput" value="">
                             <select id="leagueSelect">
-                                <option value="">All European Leagues</option>
-                                <option value="top">Top 10 Leagues Only</option>
-                                <option value="all">All Leagues (Europe)</option>
                                 <option value="39">Premier League</option>
                                 <option value="140">La Liga</option>
                                 <option value="78">Bundesliga</option>
                                 <option value="135">Serie A</option>
                                 <option value="61">Ligue 1</option>
-                                <option value="94">Primeira Liga</option>
-                                <option value="88">Eredivisie</option>
-                                <option value="203">Super Lig</option>
-                                <option value="144">Jupiler Pro League</option>
                             </select>
                         </div>
                         
                         <div class="button-group">
                             <button class="btn btn-primary" onclick="loadGames()">
-                                <i class="fas fa-sync-alt"></i> LOAD GAMES
+                                <i class="fas fa-sync-alt"></i> LOAD MATCHES
                             </button>
                             <button class="btn btn-secondary" onclick="loadLiveGames()">
                                 <i class="fas fa-broadcast-tower"></i> LIVE GAMES
                             </button>
-                            <button class="btn btn-secondary btn-small" onclick="loadAllEuropeanLeagues()" title="Load all European leagues">
-                                <i class="fas fa-globe-europe"></i> ALL EU
-                            </button>
                         </div>
                         
-                        <!-- Progress Bar -->
-                        <div class="progress-container" id="progressContainer" style="display: none;">
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="progressFill"></div>
+                        <!-- Quick Stats -->
+                        <div class="stats-container">
+                            <div class="stat-card">
+                                <i class="fas fa-calendar-day"></i>
+                                <div class="stat-value-large" id="todayDate">--</div>
+                                <div class="stat-label">Today</div>
                             </div>
-                            <div class="progress-text" id="progressText">Loading leagues...</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Quick Stats -->
-                    <div class="stats-container" id="quickStats">
-                        <div class="stat-card">
-                            <i class="fas fa-calendar-day"></i>
-                            <div class="stat-value-large" id="todayDate">--</div>
-                            <div class="stat-label">Today</div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-futbol"></i>
-                            <div class="stat-value-large" id="totalMatches">0</div>
-                            <div class="stat-label">Matches</div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-broadcast-tower"></i>
-                            <div class="stat-value-large" id="liveMatches">0</div>
-                            <div class="stat-label">Live</div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-check-circle"></i>
-                            <div class="stat-value-large" id="completedMatches">0</div>
-                            <div class="stat-label">Finished</div>
+                            <div class="stat-card">
+                                <i class="fas fa-futbol"></i>
+                                <div class="stat-value-large" id="totalMatches">0</div>
+                                <div class="stat-label">Matches</div>
+                            </div>
+                            <div class="stat-card">
+                                <i class="fas fa-broadcast-tower"></i>
+                                <div class="stat-value-large" id="liveMatches">0</div>
+                                <div class="stat-label">Live</div>
+                            </div>
+                            <div class="stat-card">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="stat-value-large" id="completedMatches">0</div>
+                                <div class="stat-label">Finished</div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="card" style="margin-top: 20px;">
-                    <h2 class="card-title"><i class="fas fa-list"></i> European Games</h2>
+                    <h2 class="card-title"><i class="fas fa-list"></i> Matches</h2>
                     <div id="gamesOutput" class="games-list">
-                        <div class="loading">Loading European games...</div>
+                        <div class="loading">Loading matches...</div>
                     </div>
                 </div>
             </div>
@@ -600,31 +457,15 @@
                             <button class="btn btn-primary" onclick="generateWhatsAppUpdate()">
                                 <i class="fas fa-robot"></i> GENERATE UPDATE
                             </button>
-                            <button class="btn btn-secondary" onclick="generatePreview()">
-                                <i class="fas fa-eye"></i> PREVIEW
+                            <button class="btn btn-secondary" onclick="clearOutput()">
+                                <i class="fas fa-trash"></i> CLEAR
                             </button>
                         </div>
                         
-                        <div class="templates">
-                            <button class="template-btn" onclick="useTemplate('morning')">
-                                <i class="fas fa-sun"></i> Morning Update
-                            </button>
-                            <button class="template-btn" onclick="useTemplate('results')">
-                                <i class="fas fa-poll"></i> Results Summary
-                            </button>
-                            <button class="template-btn" onclick="useTemplate('preview')">
-                                <i class="fas fa-binoculars"></i> Match Preview
-                            </button>
-                            <button class="template-btn" onclick="useTemplate('live')">
-                                <i class="fas fa-broadcast-tower"></i> Live Update
-                            </button>
-                        </div>
-                        
-                        <!-- League Selection for WhatsApp -->
                         <div style="margin: 15px 0;">
-                            <label style="color: #aaa; font-size: 0.9rem;">
-                                <input type="checkbox" id="includeAllLeagues" checked onchange="toggleLeagueFilter()">
-                                Include ALL European leagues in WhatsApp update
+                            <label style="color: #aaa; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="includeAllLeagues" checked>
+                                Include all major leagues
                             </label>
                         </div>
                     </div>
@@ -640,19 +481,16 @@
                     
                     <!-- Output Actions -->
                     <div class="output-actions">
-                        <button class="btn btn-copy" onclick="copyToClipboard()" id="copyBtn">
+                        <button class="btn btn-primary" onclick="copyToClipboard()" style="flex: 2;">
                             <i class="far fa-copy"></i> COPY TO CLIPBOARD
                         </button>
-                        <button class="btn btn-clear" onclick="clearOutput()">
-                            <i class="fas fa-trash"></i> CLEAR
-                        </button>
-                        <button class="btn btn-test" onclick="testOnWhatsApp()">
+                        <button class="btn" onclick="testOnWhatsApp()" style="flex: 1; background: #075E54; color: white;">
                             <i class="fab fa-whatsapp"></i> TEST
                         </button>
                     </div>
                     
                     <!-- Message Stats -->
-                    <div style="text-align: center; margin-top: 15px; color: #888; font-size: 0.9rem;">
+                    <div class="message-stats">
                         <span id="messageStats">0 characters • 0 lines</span>
                     </div>
                 </div>
@@ -667,254 +505,324 @@
     </div>
 
     <script>
-    // ==================== CONFIGURATION ==================
-    const CONFIG = {
-        API_BASE: '/api', // Your backend API
+        // ==================== CONFIGURATION ==================
+        const CONFIG = {
+            // Simple league list
+            LEAGUES: [
+                { id: '39', name: 'Premier League', emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+                { id: '140', name: 'La Liga', emoji: '🇪🇸' },
+                { id: '78', name: 'Bundesliga', emoji: '🇩🇪' },
+                { id: '135', name: 'Serie A', emoji: '🇮🇹' },
+                { id: '61', name: 'Ligue 1', emoji: '🇫🇷' }
+            ]
+        };
         
-        // Simple league list
-        LEAGUES: [
-            { id: '39', name: 'Premier League', emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
-            { id: '140', name: 'La Liga', emoji: '🇪🇸' },
-            { id: '78', name: 'Bundesliga', emoji: '🇩🇪' },
-            { id: '135', name: 'Serie A', emoji: '🇮🇹' },
-            { id: '61', name: 'Ligue 1', emoji: '🇫🇷' }
-        ]
-    };
-    
-    // ==================== INITIALIZATION ==================
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set today's date
-        const today = new Date();
-        document.getElementById('dateInput').valueAsDate = today;
-        document.getElementById('todayDate').textContent = formatDate(today);
-        
-        // Load games automatically
-        setTimeout(() => loadGames(), 1000);
-    });
-    
-    // ==================== API FUNCTIONS ==================
-    async function loadGames() {
-        const output = document.getElementById('gamesOutput');
-        output.innerHTML = '<div class="loading">Loading today\'s matches...</div>';
-        
-        const date = document.getElementById('dateInput').value;
-        const leagueSelect = document.getElementById('leagueSelect').value;
-        
-        try {
-            // Determine which league to load
-            let leagueId = '39'; // Default to Premier League
-            if (leagueSelect && leagueSelect !== 'top' && leagueSelect !== 'all') {
-                leagueId = leagueSelect;
-            }
+        // ==================== INITIALIZATION ==================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set today's date
+            const today = new Date();
+            document.getElementById('dateInput').valueAsDate = today;
+            document.getElementById('todayDate').textContent = formatDate(today);
             
-            // Call your backend API
-            const response = await fetch(`/api/fixtures?league=${leagueId}&date=${date}`);
-            const data = await response.json();
+            // Set API status
+            document.getElementById('apiStatus').innerHTML = 'API: ✅ Connected';
             
-            if (!data.success) {
-                throw new Error(data.error || 'API error');
-            }
+            // Load games automatically
+            setTimeout(() => loadGames(), 1000);
+        });
+        
+        // ==================== API FUNCTIONS ==================
+        async function loadGames() {
+            const output = document.getElementById('gamesOutput');
+            output.innerHTML = '<div class="loading">Loading matches...</div>';
             
-            if (data.fixtures.length === 0) {
+            const date = document.getElementById('dateInput').value;
+            const leagueSelect = document.getElementById('leagueSelect').value;
+            
+            try {
+                // Determine which league to load
+                let leagueId = leagueSelect || '39';
+                
+                // Call your backend API
+                const response = await fetch(`/api/fixtures?league=${leagueId}&date=${date}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'API error');
+                }
+                
+                if (data.fixtures.length === 0) {
+                    output.innerHTML = `
+                        <div class="success">
+                            <i class="fas fa-info-circle"></i>
+                            <p>No matches scheduled for ${formatDisplayDate(date)}</p>
+                            <small>Try a different date or league</small>
+                        </div>
+                    `;
+                    updateStats(0, 0, 0);
+                    return;
+                }
+                
+                displayGames(data.fixtures);
+                showToast(`Loaded ${data.fixtures.length} matches!`);
+                
+            } catch (error) {
+                console.error('Error:', error);
                 output.innerHTML = `
-                    <div class="success">
-                        <i class="fas fa-info-circle"></i>
-                        <p>No matches scheduled for ${formatDisplayDate(date)}</p>
-                        <small>Try a different date or league</small>
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error loading matches</p>
+                        <small>${error.message}</small>
                     </div>
                 `;
+                updateStats(0, 0, 0);
+            }
+        }
+        
+        async function loadLiveGames() {
+            const output = document.getElementById('gamesOutput');
+            output.innerHTML = '<div class="loading">Checking for live games...</div>';
+            
+            const date = document.getElementById('dateInput').value;
+            
+            try {
+                // Check all leagues for live games
+                let allLiveGames = [];
+                
+                for (const league of CONFIG.LEAGUES) {
+                    const response = await fetch(`/api/fixtures?league=${league.id}&date=${date}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.fixtures) {
+                        const liveGames = data.fixtures.filter(game => 
+                            game.fixture.status.short === 'LIVE'
+                        );
+                        
+                        if (liveGames.length > 0) {
+                            allLiveGames = allLiveGames.concat(liveGames);
+                        }
+                    }
+                }
+                
+                if (allLiveGames.length === 0) {
+                    output.innerHTML = `
+                        <div class="success">
+                            <i class="fas fa-broadcast-tower"></i>
+                            <p>No live games at the moment</p>
+                            <small>Try loading matches for today</small>
+                        </div>
+                    `;
+                    updateStats(0, 0, 0);
+                    return;
+                }
+                
+                displayGames(allLiveGames);
+                showToast(`Found ${allLiveGames.length} live matches!`);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                output.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error loading live games</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayGames(fixtures) {
+            const output = document.getElementById('gamesOutput');
+            
+            if (!fixtures || fixtures.length === 0) {
+                output.innerHTML = '<div class="error">No matches found</div>';
                 updateStats(0, 0, 0);
                 return;
             }
             
-            displayGames(data.fixtures);
-            showToast(`Loaded ${data.fixtures.length} matches!`);
+            let html = '';
+            let liveCount = 0;
+            let completedCount = 0;
             
-        } catch (error) {
-            console.error('Error:', error);
-            output.innerHTML = `
-                <div class="error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>Error loading matches</p>
-                    <small>${error.message}</small>
-                    <p style="margin-top: 10px; font-size: 12px;">
-                        Make sure your backend API is running.
-                    </p>
-                </div>
-            `;
-        }
-    }
-    
-    function displayGames(fixtures) {
-        const output = document.getElementById('gamesOutput');
-        
-        let html = '';
-        let liveCount = 0;
-        let completedCount = 0;
-        
-        fixtures.forEach(game => {
-            const isLive = game.fixture.status.short === 'LIVE';
-            const isCompleted = game.fixture.status.short === 'FT';
-            
-            if (isLive) liveCount++;
-            if (isCompleted) completedCount++;
-            
-            const matchTime = new Date(game.fixture.date);
-            const timeStr = matchTime.toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit' 
+            fixtures.forEach(game => {
+                const matchTime = new Date(game.fixture.date);
+                const timeStr = matchTime.toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                const isLive = game.fixture.status.short === 'LIVE';
+                const isCompleted = game.fixture.status.short === 'FT';
+                
+                if (isLive) liveCount++;
+                if (isCompleted) completedCount++;
+                
+                html += `
+                    <div class="game-item" style="${isLive ? 'border-left-color: #ff4444;' : ''}">
+                        <div class="game-header">
+                            <div class="league">
+                                ${timeStr}
+                                ${isLive ? '<span class="live-badge">LIVE</span>' : ''}
+                            </div>
+                            <div class="time">
+                                ${game.league.emoji || '⚽'} ${game.league.name}
+                            </div>
+                        </div>
+                        
+                        <div class="teams">
+                            <div class="team">
+                                <div class="team-name">${game.teams.home.name}</div>
+                            </div>
+                            <div class="vs">VS</div>
+                            <div class="team">
+                                <div class="team-name">${game.teams.away.name}</div>
+                            </div>
+                        </div>
+                        
+                        ${game.goals.home !== null ? `
+                            <div style="text-align: center; font-size: 1.8rem; font-weight: bold; margin: 15px 0; color: #25D366;">
+                                ${game.goals.home} - ${game.goals.away}
+                            </div>
+                        ` : `
+                            <div style="text-align: center; color: #aaa; font-size: 0.9rem; margin: 15px 0;">
+                                ${game.fixture.status.long}
+                            </div>
+                        `}
+                        
+                        <div style="text-align: center; color: #888; font-size: 0.8rem;">
+                            ${game.fixture.venue || 'Stadium'}
+                        </div>
+                    </div>
+                `;
             });
             
-            html += `
-                <div class="game-item" style="${isLive ? 'border-left-color: #ff4444;' : ''}">
-                    <div class="game-header">
-                        <div class="league">
-                            ${timeStr}
-                            ${isLive ? '<span class="live-badge">LIVE</span>' : ''}
-                        </div>
-                        <div class="time">
-                            ${game.league.emoji || '⚽'} ${game.league.name}
-                        </div>
-                    </div>
-                    
-                    <div class="teams">
-                        <div class="team">
-                            <div class="team-name">${game.teams.home.name}</div>
-                        </div>
-                        <div class="vs">VS</div>
-                        <div class="team">
-                            <div class="team-name">${game.teams.away.name}</div>
-                        </div>
-                    </div>
-                    
-                    ${game.goals.home !== null ? `
-                        <div style="text-align: center; font-size: 2rem; font-weight: bold; margin: 15px 0; color: #25D366;">
-                            ${game.goals.home} - ${game.goals.away}
-                        </div>
-                    ` : `
-                        <div style="text-align: center; color: #aaa; font-size: 0.9rem; margin: 15px 0;">
-                            ${game.fixture.status.long}
-                        </div>
-                    `}
-                    
-                    <div style="text-align: center; color: #888; font-size: 0.8rem;">
-                        ${game.fixture.venue}
-                    </div>
-                </div>
-            `;
-        });
+            output.innerHTML = html;
+            updateStats(fixtures.length, liveCount, completedCount);
+        }
         
-        output.innerHTML = html;
-        updateStats(fixtures.length, liveCount, completedCount);
-    }
-    
-    // ==================== WHATSAPP FUNCTIONS ==================
-    async function generateWhatsAppUpdate() {
-        const output = document.getElementById('whatsappOutput');
-        output.innerHTML = '<div class="loading">Generating update...</div>';
-        
-        try {
-            const response = await fetch('/api/whatsapp-updates');
-            const data = await response.json();
+        // ==================== WHATSAPP FUNCTIONS ==================
+        async function generateWhatsAppUpdate() {
+            const output = document.getElementById('whatsappOutput');
+            output.innerHTML = '<div class="loading">Generating WhatsApp update...</div>';
             
-            if (!data.success) {
-                throw new Error(data.error || 'Generation failed');
-            }
-            
-            if (data.messages && data.messages.length > 0) {
-                output.innerHTML = `<div style="white-space: pre-wrap;">${data.messages[0].content}</div>`;
-                updateMessageStats(data.messages[0].content);
-                showToast(`Generated with ${data.matches.length} matches!`);
-            } else {
+            try {
+                const response = await fetch('/api/whatsapp-updates');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Generation failed');
+                }
+                
+                if (data.message) {
+                    output.innerHTML = `<div style="white-space: pre-wrap;">${data.message}</div>`;
+                    updateMessageStats(data.message);
+                    showToast(`Update generated with ${data.matches?.length || 0} matches!`);
+                } else {
+                    output.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>No matches found for today</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
                 output.innerHTML = `
                     <div class="error">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p>No matches found for today</p>
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error generating update</p>
+                        <small>${error.message}</small>
                     </div>
                 `;
             }
+        }
+        
+        // ==================== UTILITY FUNCTIONS ==================
+        function formatDate(date) {
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+        
+        function formatDisplayDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+        
+        function updateStats(total, live, completed) {
+            document.getElementById('totalMatches').textContent = total;
+            document.getElementById('liveMatches').textContent = live;
+            document.getElementById('completedMatches').textContent = completed;
+        }
+        
+        function updateMessageStats(message) {
+            const charCount = message.length;
+            const lineCount = message.split('\n').length;
+            document.getElementById('messageStats').textContent = 
+                `${charCount} characters • ${lineCount} lines`;
+        }
+        
+        async function copyToClipboard() {
+            const output = document.getElementById('whatsappOutput');
+            const text = output.textContent || output.innerText;
             
-        } catch (error) {
-            console.error('Error:', error);
-            output.innerHTML = `
-                <div class="error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>Error generating update</p>
-                    <small>${error.message}</small>
+            if (!text || text.includes('Your WhatsApp message')) {
+                showToast('No message to copy!', 'error');
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('Copied to clipboard!');
+            } catch (error) {
+                showToast('Failed to copy', 'error');
+            }
+        }
+        
+        function clearOutput() {
+            document.getElementById('whatsappOutput').innerHTML = `
+                <div style="text-align: center; padding: 50px; color: #666;">
+                    <i class="fab fa-whatsapp" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                    <p>Your WhatsApp message will appear here</p>
+                    <small>Click "GENERATE UPDATE" to start</small>
                 </div>
             `;
-        }
-    }
-    
-    // ==================== UTILITY FUNCTIONS ==================
-    function formatDate(date) {
-        return date.toLocaleDateString('en-US', { 
-            weekday: 'short', 
-            month: 'short', 
-            day: 'numeric' 
-        });
-    }
-    
-    function formatDisplayDate(dateStr) {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('en-US', { 
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    }
-    
-    function updateStats(total, live, completed) {
-        document.getElementById('totalMatches').textContent = total;
-        document.getElementById('liveMatches').textContent = live;
-        document.getElementById('completedMatches').textContent = completed;
-    }
-    
-    function updateMessageStats(message) {
-        document.getElementById('messageStats').textContent = 
-            `${message.length} characters • ${message.split('\\n').length} lines`;
-    }
-    
-    async function copyToClipboard() {
-        const output = document.getElementById('whatsappOutput');
-        const text = output.textContent;
-        
-        if (!text || text.includes('Your WhatsApp message')) {
-            showToast('No message to copy!', 'error');
-            return;
+            document.getElementById('messageStats').textContent = '0 characters • 0 lines';
         }
         
-        try {
-            await navigator.clipboard.writeText(text);
-            showToast('Copied to clipboard!');
-        } catch (error) {
-            showToast('Failed to copy', 'error');
+        function testOnWhatsApp() {
+            const output = document.getElementById('whatsappOutput');
+            const text = output.textContent || output.innerText;
+            
+            if (!text || text.includes('Your WhatsApp message')) {
+                showToast('No message to test!', 'error');
+                return;
+            }
+            
+            const encoded = encodeURIComponent(text);
+            window.open(`https://wa.me/?text=${encoded}`, '_blank');
+            showToast('Opened in WhatsApp!');
         }
-    }
-    
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        const toastMsg = document.getElementById('toastMessage');
         
-        toastMsg.textContent = message;
-        toast.style.background = type === 'error' ? '#ff4444' : '#25D366';
-        toast.classList.add('show');
-        
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
-    }
-    
-    function clearOutput() {
-        document.getElementById('whatsappOutput').innerHTML = `
-            <div style="text-align: center; padding: 50px; color: #666;">
-                <i class="fab fa-whatsapp" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
-                <p>Your WhatsApp message will appear here</p>
-                <small>Click "GENERATE UPDATE" to start</small>
-            </div>
-        `;
-    }
-</script>
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            
+            toastMsg.textContent = message;
+            toast.style.background = type === 'error' ? '#ff4444' : '#25D366';
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
