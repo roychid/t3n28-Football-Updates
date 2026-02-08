@@ -1,12 +1,11 @@
-// api/fixtures.js
+// api/fixtures.js - DEBUG VERSION
 export default async function handler(req, res) {
   try {
-    // ⚠️ REPLACE THIS WITH YOUR ACTUAL RAPIDAPI KEY ⚠️
-    const RAPIDAPI_KEY = "b1d4f776c5msh0a5a6ce81cd9670p1e5ae8jsn169c02186937"; // YOUR REAL KEY HERE
+    const RAPIDAPI_KEY = "b1d4f776c5msh0a5a6ce81cd9670p1e5ae8jsn169c02186937";
     
     if (!RAPIDAPI_KEY || RAPIDAPI_KEY === "YOUR-RAPIDAPI-KEY-HERE") {
       return res.status(500).json({ 
-        error: "Please add your real RapidAPI key in api/fixtures.js" 
+        error: "Please add your real RapidAPI key" 
       });
     }
 
@@ -18,37 +17,51 @@ export default async function handler(req, res) {
       "140": "laliga", 
       "78": "bundesliga",
       "135": "seriea",
-      "61": "ligue1",
-      "2": "championsleague",
-      "3": "europaleague"
+      "61": "ligue1"
     };
 
-    // Get championship name
     let championship = "premierleague";
     if (league && leagueMap[league]) {
       championship = leagueMap[league];
     }
 
-    // Use date or today (try yesterday if no data)
+    // 🔧 FIX: Use CURRENT dates (2026, not 2024!)
     let queryDate = date || new Date().toISOString().split("T")[0];
     
-    // Try multiple dates for testing
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
     const testDates = [
       queryDate,
-      "2024-01-13",  // Saturday - usually has matches
-      "2024-01-20",
-      "2024-01-06"
+      today.toISOString().split("T")[0],
+      yesterday.toISOString().split("T")[0],
+      tomorrow.toISOString().split("T")[0],
+      "2026-02-08", // Specific current date
+      "2026-02-15"  // Next weekend
     ];
 
     let fixtures = [];
     let successfulDate = queryDate;
+    let debugInfo = {
+      attempts: [],
+      apiKey: RAPIDAPI_KEY.substring(0, 10) + "...",
+      championship: championship
+    };
 
     // Try different dates
     for (const testDate of testDates) {
       try {
         const url = `https://football98.p.rapidapi.com/${championship}/fixtures/?date=${testDate}`;
         
-        console.log("Trying:", url);
+        console.log("🔍 Trying:", url);
+        debugInfo.attempts.push({
+          date: testDate,
+          url: url,
+          status: 'attempting'
+        });
 
         const response = await fetch(url, {
           headers: {
@@ -58,47 +71,91 @@ export default async function handler(req, res) {
           }
         });
 
+        // 🔧 LOG THE RESPONSE
+        console.log(`📡 Response Status: ${response.status}`);
+        console.log(`📡 Response OK: ${response.ok}`);
+        
+        const responseText = await response.text();
+        console.log(`📡 Raw Response: ${responseText.substring(0, 500)}...`);
+        
+        debugInfo.attempts[debugInfo.attempts.length - 1].status = response.status;
+        debugInfo.attempts[debugInfo.attempts.length - 1].ok = response.ok;
+        debugInfo.attempts[debugInfo.attempts.length - 1].preview = responseText.substring(0, 200);
+
         if (response.ok) {
-          const data = await response.json();
+          let data;
+          try {
+            data = JSON.parse(responseText);
+          } catch (parseErr) {
+            console.error("❌ JSON Parse Error:", parseErr.message);
+            debugInfo.attempts[debugInfo.attempts.length - 1].error = "JSON parse failed";
+            continue;
+          }
           
-          // Extract fixtures
+          // 🔧 LOG THE ACTUAL STRUCTURE
+          console.log("📦 Data structure:", JSON.stringify(data, null, 2).substring(0, 500));
+          debugInfo.attempts[debugInfo.attempts.length - 1].structure = Object.keys(data);
+          
+          // Extract fixtures - try all possible structures
           if (Array.isArray(data)) {
             fixtures = data;
+            console.log("✅ Found fixtures as direct array");
           } else if (data.response && Array.isArray(data.response)) {
             fixtures = data.response;
+            console.log("✅ Found fixtures in data.response");
           } else if (data.data && Array.isArray(data.data)) {
             fixtures = data.data;
+            console.log("✅ Found fixtures in data.data");
+          } else if (data.fixtures && Array.isArray(data.fixtures)) {
+            fixtures = data.fixtures;
+            console.log("✅ Found fixtures in data.fixtures");
+          } else if (data.matches && Array.isArray(data.matches)) {
+            fixtures = data.matches;
+            console.log("✅ Found fixtures in data.matches");
+          } else {
+            console.log("❌ Unknown data structure:", Object.keys(data));
+            debugInfo.attempts[debugInfo.attempts.length - 1].error = "Unknown structure: " + Object.keys(data).join(", ");
           }
           
           if (fixtures.length > 0) {
+            console.log(`✅ Found ${fixtures.length} fixtures for ${testDate}`);
             successfulDate = testDate;
+            debugInfo.attempts[debugInfo.attempts.length - 1].found = fixtures.length;
             break;
           }
+        } else {
+          console.error(`❌ API Error: ${response.status} - ${responseText}`);
         }
+        
       } catch (err) {
-        continue; // Try next date
+        console.error(`❌ Fetch Error for ${testDate}:`, err.message);
+        debugInfo.attempts[debugInfo.attempts.length - 1].error = err.message;
+        continue;
       }
     }
 
-    // If still no fixtures, create sample data for demo
+    // If still no fixtures, create sample data
     if (fixtures.length === 0) {
-      console.log("No real data found, using sample data");
+      console.log("⚠️ No real data found, using sample data");
+      debugInfo.usingSampleData = true;
       fixtures = getSampleFixtures(championship, queryDate);
     }
 
     // Format fixtures
     const formattedFixtures = fixtures.map((f, index) => ({
       fixture: {
-        id: f.id || `sample_${index}`,
-        date: f.date || f.time || new Date(successfulDate).toISOString(),
+        id: f.id || f.fixture_id || `sample_${index}`,
+        date: f.date || f.time || f.fixture?.date || new Date(successfulDate).toISOString(),
         status: {
-          short: f.status || (index % 3 === 0 ? "FT" : index % 3 === 1 ? "LIVE" : "NS"),
-          long: f.status_long || 
+          short: f.status || f.fixture?.status?.short || 
+                 (index % 3 === 0 ? "FT" : index % 3 === 1 ? "LIVE" : "NS"),
+          long: f.status_long || f.fixture?.status?.long || 
                (f.status === "FT" ? "Match Finished" : 
                 f.status === "LIVE" ? "In Play" : "Not Started"),
-          elapsed: f.elapsed || (f.status === "LIVE" ? "65" : null)
+          elapsed: f.elapsed || f.fixture?.status?.elapsed || 
+                  (f.status === "LIVE" ? "65" : null)
         },
-        venue: f.venue || "Stadium"
+        venue: f.venue || f.fixture?.venue?.name || "Stadium"
       },
       league: {
         id: league || "39",
@@ -108,19 +165,21 @@ export default async function handler(req, res) {
       },
       teams: {
         home: {
-          id: null,
-          name: f.home || f.home_team || getTeamName("home", index),
-          logo: null
+          id: f.home_team_id || f.teams?.home?.id || null,
+          name: f.home || f.home_team || f.teams?.home?.name || getTeamName("home", index),
+          logo: f.home_logo || f.teams?.home?.logo || null
         },
         away: {
-          id: null,
-          name: f.away || f.away_team || getTeamName("away", index),
-          logo: null
+          id: f.away_team_id || f.teams?.away?.id || null,
+          name: f.away || f.away_team || f.teams?.away?.name || getTeamName("away", index),
+          logo: f.away_logo || f.teams?.away?.logo || null
         }
       },
       goals: {
-        home: f.home_goals || f.home_score || (f.status === "FT" ? Math.floor(Math.random() * 4) : null),
-        away: f.away_goals || f.away_score || (f.status === "FT" ? Math.floor(Math.random() * 4) : null)
+        home: f.home_goals ?? f.home_score ?? f.goals?.home ?? f.score?.fulltime?.home ?? 
+              (f.status === "FT" ? Math.floor(Math.random() * 4) : null),
+        away: f.away_goals ?? f.away_score ?? f.goals?.away ?? f.score?.fulltime?.away ?? 
+              (f.status === "FT" ? Math.floor(Math.random() * 4) : null)
       }
     }));
 
@@ -130,28 +189,28 @@ export default async function handler(req, res) {
       league: championship,
       count: formattedFixtures.length,
       fixtures: formattedFixtures,
-      note: fixtures.length > 0 ? "Real data" : "Sample data (no matches scheduled)"
+      note: fixtures.length > 0 && !debugInfo.usingSampleData ? "Real data" : "Sample data",
+      debug: debugInfo  // 🔧 DEBUGGING INFO
     });
 
   } catch (err) {
-    console.error("Error:", err);
+    console.error("💥 Fatal Error:", err);
     res.status(500).json({
       success: false,
-      error: err.message
+      error: err.message,
+      stack: err.stack
     });
   }
 }
 
-// Helper functions
+// Helper functions (same as before)
 function getLeagueName(championship) {
   const names = {
     'premierleague': 'Premier League',
     'laliga': 'La Liga',
     'bundesliga': 'Bundesliga',
     'seriea': 'Serie A',
-    'ligue1': 'Ligue 1',
-    'championsleague': 'Champions League',
-    'europaleague': 'Europa League'
+    'ligue1': 'Ligue 1'
   };
   return names[championship] || championship;
 }
@@ -162,9 +221,7 @@ function getCountry(championship) {
     'laliga': 'Spain', 
     'bundesliga': 'Germany',
     'seriea': 'Italy',
-    'ligue1': 'France',
-    'championsleague': 'Europe',
-    'europaleague': 'Europe'
+    'ligue1': 'France'
   };
   return map[championship] || 'Europe';
 }
@@ -175,9 +232,7 @@ function getEmoji(championship) {
     'laliga': '🇪🇸',
     'bundesliga': '🇩🇪',
     'seriea': '🇮🇹', 
-    'ligue1': '🇫🇷',
-    'championsleague': '🏆',
-    'europaleague': '🏆'
+    'ligue1': '🇫🇷'
   };
   return map[championship] || '⚽';
 }
@@ -191,7 +246,6 @@ function getTeamName(type, index) {
 }
 
 function getSampleFixtures(championship, date) {
-  const leagueName = getLeagueName(championship);
   return [
     {
       id: 1,
@@ -201,8 +255,7 @@ function getSampleFixtures(championship, date) {
       away_score: 1,
       status: "FT",
       venue: "Old Trafford",
-      date: `${date}T15:00:00Z`,
-      round: "Matchday 21"
+      date: `${date}T15:00:00Z`
     },
     {
       id: 2,
@@ -213,7 +266,6 @@ function getSampleFixtures(championship, date) {
       status: "LIVE",
       venue: "Emirates Stadium",
       date: `${date}T17:30:00Z`,
-      round: "Matchday 21",
       elapsed: "75"
     },
     {
@@ -224,8 +276,7 @@ function getSampleFixtures(championship, date) {
       away_score: null,
       status: "NS",
       venue: "Stamford Bridge",
-      date: `${date}T20:00:00Z`,
-      round: "Matchday 21"
+      date: `${date}T20:00:00Z`
     }
   ];
 }
