@@ -1,4 +1,4 @@
-// api/fixtures.js - FIXED VERSION
+// api/whatsapp-updates.js - FIXED VERSION
 export default async function handler(req, res) {
   try {
     const RAPIDAPI_KEY = "b1d4f776c5msh0a5a6ce81cd9670p1e5ae8jsn169c02186937";
@@ -6,376 +6,385 @@ export default async function handler(req, res) {
     if (!RAPIDAPI_KEY || RAPIDAPI_KEY === "YOUR-RAPIDAPI-KEY-HERE") {
       return res.status(500).json({ 
         success: false,
-        error: "Please add your real RapidAPI key in api/fixtures.js" 
+        error: "Please add your real RapidAPI key in api/whatsapp-updates.js" 
       });
     }
 
-    const { league, date } = req.query;
+    const championships = [
+      { id: "premierleague", name: "Premier League", emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+      { id: "laliga", name: "La Liga", emoji: "🇪🇸" },
+      { id: "bundesliga", name: "Bundesliga", emoji: "🇩🇪" },
+      { id: "seriea", name: "Serie A", emoji: "🇮🇹" },
+      { id: "ligue1", name: "Ligue 1", emoji: "🇫🇷" }
+    ];
 
-    // League mapping
-    const leagueMap = {
-      "39": "premierleague",
-      "140": "laliga", 
-      "78": "bundesliga",
-      "135": "seriea",
-      "61": "ligue1",
-      "2": "championsleague",
-      "3": "europaleague"
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    
+    console.log(`📅 Generating WhatsApp update for ${todayStr}...`);
+
+    const allMatches = [];
+    let hasRealData = false;
+
+    // Fetch fixtures from each championship
+    for (const champ of championships) {
+      try {
+        // ✅ CORRECT API CALL - No date parameter!
+        const url = `https://football98.p.rapidapi.com/${champ.id}/fixtures/`;
+        
+        console.log(`🔍 Fetching ${champ.name}...`);
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            "X-RapidAPI-Key": RAPIDAPI_KEY,
+            "X-RapidAPI-Host": "football98.p.rapidapi.com"
+          }
+        });
+
+        if (!response.ok) {
+          console.error(`❌ ${champ.name}: HTTP ${response.status}`);
+          continue;
+        }
+
+        const data = await response.json();
+        
+        // Extract fixtures array
+        let allFixtures = [];
+        if (Array.isArray(data)) {
+          allFixtures = data;
+        } else if (data.fixtures && Array.isArray(data.fixtures)) {
+          allFixtures = data.fixtures;
+        } else if (data.data && Array.isArray(data.data)) {
+          allFixtures = data.data;
+        } else if (data.response && Array.isArray(data.response)) {
+          allFixtures = data.response;
+        }
+
+        console.log(`📦 ${champ.name}: ${allFixtures.length} total fixtures`);
+
+        // ✅ FILTER BY TODAY'S DATE
+        const todayFixtures = allFixtures.filter(fixture => {
+          let fixtureDate = null;
+          
+          if (fixture.date) {
+            fixtureDate = fixture.date.split('T')[0];
+          } else if (fixture.time) {
+            fixtureDate = fixture.time.split(' ')[0];
+          } else if (fixture.fixture && fixture.fixture.date) {
+            fixtureDate = fixture.fixture.date.split('T')[0];
+          }
+          
+          return fixtureDate === todayStr;
+        });
+
+        console.log(`✅ ${champ.name}: ${todayFixtures.length} matches today`);
+
+        // Parse and add to allMatches
+        todayFixtures.forEach(fixture => {
+          const match = parseMatch(fixture, champ);
+          if (match) {
+            allMatches.push(match);
+            hasRealData = true;
+          }
+        });
+
+        // Small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+      } catch (err) {
+        console.error(`❌ Error fetching ${champ.name}:`, err.message);
+        continue;
+      }
+    }
+
+    // If no real data found, use sample data
+    if (!hasRealData || allMatches.length === 0) {
+      console.log("⚠️ No real data found, using sample matches");
+      allMatches.push(...getSampleMatches(todayStr));
+    }
+
+    // Generate WhatsApp message
+    const message = generateWhatsAppMessage(allMatches, todayStr);
+    
+    const stats = {
+      total: allMatches.length,
+      live: allMatches.filter(m => m.status === "LIVE").length,
+      completed: allMatches.filter(m => m.status === "FT").length,
+      upcoming: allMatches.filter(m => m.status === "NS").length
     };
 
-    // Get championship name
-    let championship = "premierleague";
-    if (league && leagueMap[league]) {
-      championship = leagueMap[league];
-    }
-
-    // Target date for filtering
-    const targetDate = date || new Date().toISOString().split("T")[0];
-    
-    console.log(`📅 Fetching ${championship} fixtures for ${targetDate}...`);
-
-    // ✅ CORRECT API CALL - No date parameter!
-    const url = `https://football98.p.rapidapi.com/${championship}/fixtures/`;
-    
-    console.log(`🔍 API URL: ${url}`);
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        "X-RapidAPI-Key": RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "football98.p.rapidapi.com"
-      }
-    });
-
-    console.log(`📡 Response Status: ${response.status}`);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ API Error: ${response.status} - ${errorText}`);
-      
-      // Return sample data on error
-      return res.status(200).json({
-        success: true,
-        date: targetDate,
-        league: championship,
-        count: 3,
-        fixtures: getSampleFixtures(championship, targetDate),
-        note: `Sample data (API Error: ${response.status})`
-      });
-    }
-
-    const data = await response.json();
-    console.log(`📦 Response type:`, Array.isArray(data) ? 'Array' : 'Object');
-    console.log(`📦 Response keys:`, Object.keys(data));
-
-    // Extract fixtures array
-    let allFixtures = [];
-    if (Array.isArray(data)) {
-      allFixtures = data;
-    } else if (data.fixtures && Array.isArray(data.fixtures)) {
-      allFixtures = data.fixtures;
-    } else if (data.data && Array.isArray(data.data)) {
-      allFixtures = data.data;
-    } else if (data.response && Array.isArray(data.response)) {
-      allFixtures = data.response;
-    } else {
-      console.error('❌ Unknown response structure:', data);
-      return res.status(200).json({
-        success: true,
-        date: targetDate,
-        league: championship,
-        count: 3,
-        fixtures: getSampleFixtures(championship, targetDate),
-        note: 'Sample data (Unknown API response structure)'
-      });
-    }
-
-    console.log(`✅ Total fixtures received: ${allFixtures.length}`);
-
-    // ✅ FILTER BY DATE ON OUR SIDE
-    const filteredFixtures = allFixtures.filter(fixture => {
-      // Extract date from fixture
-      let fixtureDate = null;
-      
-      if (fixture.date) {
-        fixtureDate = fixture.date.split('T')[0];
-      } else if (fixture.time) {
-        fixtureDate = fixture.time.split(' ')[0];
-      } else if (fixture.fixture && fixture.fixture.date) {
-        fixtureDate = fixture.fixture.date.split('T')[0];
-      }
-      
-      // Compare dates
-      return fixtureDate === targetDate;
-    });
-
-    console.log(`✅ Fixtures for ${targetDate}: ${filteredFixtures.length}`);
-
-    // If no fixtures for this date, try to get any recent fixtures
-    let finalFixtures = filteredFixtures;
-    if (filteredFixtures.length === 0) {
-      // Get fixtures from the last 7 days or next 7 days
-      const today = new Date(targetDate);
-      const weekAgo = new Date(today);
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      const weekAhead = new Date(today);
-      weekAhead.setDate(weekAhead.getDate() + 7);
-      
-      finalFixtures = allFixtures.filter(fixture => {
-        let fixtureDate = null;
-        if (fixture.date) fixtureDate = new Date(fixture.date);
-        else if (fixture.time) fixtureDate = new Date(fixture.time);
-        else if (fixture.fixture && fixture.fixture.date) fixtureDate = new Date(fixture.fixture.date);
-        
-        return fixtureDate && fixtureDate >= weekAgo && fixtureDate <= weekAhead;
-      });
-      
-      console.log(`ℹ️  No fixtures for ${targetDate}, showing ${finalFixtures.length} fixtures from nearby dates`);
-    }
-
-    // If still no fixtures, use sample data
-    if (finalFixtures.length === 0) {
-      console.log('⚠️ No fixtures found, using sample data');
-      finalFixtures = getSampleFixtures(championship, targetDate);
-    }
-
-    // Format fixtures
-    const formattedFixtures = finalFixtures.map((f, index) => {
-      // Parse the fixture data
-      const fixtureData = parseFixture(f, championship, targetDate);
-      return fixtureData;
-    });
+    console.log(`✅ Generated update with ${stats.total} matches`);
 
     res.status(200).json({
       success: true,
-      date: targetDate,
-      league: championship,
-      count: formattedFixtures.length,
-      fixtures: formattedFixtures,
-      note: filteredFixtures.length > 0 ? "Real data" : 
-            finalFixtures.length > 3 ? "Nearby dates data" : "Sample data"
+      date: todayStr,
+      matches: allMatches,
+      message: message,
+      stats: stats,
+      note: hasRealData ? "Real match data" : "Sample data (no matches scheduled today)"
     });
 
   } catch (err) {
     console.error("💥 Fatal Error:", err);
     
-    // Return sample data on error
-    const targetDate = req.query.date || new Date().toISOString().split("T")[0];
-    const championship = req.query.league ? 
-      (leagueMap[req.query.league] || "premierleague") : "premierleague";
+    const todayStr = new Date().toISOString().split("T")[0];
+    const sampleMatches = getSampleMatches(todayStr);
     
-    res.status(200).json({
+    res.status(200).json({ 
       success: true,
-      date: targetDate,
-      league: championship,
-      count: 3,
-      fixtures: getSampleFixtures(championship, targetDate),
+      date: todayStr,
+      matches: sampleMatches,
+      message: generateWhatsAppMessage(sampleMatches, todayStr),
+      stats: {
+        total: sampleMatches.length,
+        live: 0,
+        completed: 2,
+        upcoming: 1
+      },
       note: `Sample data (Error: ${err.message})`
     });
   }
 }
 
-// Parse a single fixture from API response
-function parseFixture(f, championship, defaultDate) {
-  // Extract date
-  let fixtureDate = defaultDate;
-  if (f.date) {
-    fixtureDate = f.date.split('T')[0];
-  } else if (f.time) {
-    fixtureDate = f.time.split(' ')[0];
-  } else if (f.fixture && f.fixture.date) {
-    fixtureDate = f.fixture.date.split('T')[0];
-  }
-
-  // Extract status
-  let status = "NS";
-  let statusLong = "Not Started";
-  let elapsed = null;
-
-  if (f.status) {
-    status = f.status;
-  } else if (f.fixture && f.fixture.status) {
-    status = f.fixture.status.short || f.fixture.status;
-  }
-
-  if (status === "FT" || status === "Finished") {
-    statusLong = "Match Finished";
-  } else if (status === "LIVE" || status === "1H" || status === "2H") {
-    statusLong = "In Play";
-    status = "LIVE";
-    elapsed = f.elapsed || f.minute || "45";
-  } else if (status === "NS" || status === "Not Started") {
-    statusLong = "Not Started";
-    status = "NS";
-  }
-
-  // Extract teams
-  let homeTeam = "Home Team";
-  let awayTeam = "Away Team";
-
-  if (f.home && f.away) {
-    homeTeam = f.home;
-    awayTeam = f.away;
-  } else if (f.home_team && f.away_team) {
-    homeTeam = f.home_team;
-    awayTeam = f.away_team;
-  } else if (f.teams && f.teams.home && f.teams.away) {
-    homeTeam = f.teams.home.name || f.teams.home;
-    awayTeam = f.teams.away.name || f.teams.away;
-  }
-
-  // Extract scores
-  let homeGoals = null;
-  let awayGoals = null;
-
-  if (status === "FT" || status === "LIVE") {
-    if (f.home_score !== undefined && f.away_score !== undefined) {
-      homeGoals = f.home_score;
-      awayGoals = f.away_score;
-    } else if (f.home_goals !== undefined && f.away_goals !== undefined) {
-      homeGoals = f.home_goals;
-      awayGoals = f.away_goals;
-    } else if (f.goals && f.goals.home !== undefined) {
-      homeGoals = f.goals.home;
-      awayGoals = f.goals.away;
-    } else if (f.score && f.score.fulltime) {
-      homeGoals = f.score.fulltime.home;
-      awayGoals = f.score.fulltime.away;
+// Parse a match from API fixture data
+function parseMatch(fixture, championship) {
+  try {
+    // Extract date and time
+    let matchDate = null;
+    let matchTime = "15:00";
+    
+    if (fixture.date) {
+      const d = new Date(fixture.date);
+      matchDate = fixture.date.split('T')[0];
+      matchTime = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    } else if (fixture.time) {
+      const parts = fixture.time.split(' ');
+      matchDate = parts[0];
+      matchTime = parts[1] || "15:00";
+    } else if (fixture.fixture && fixture.fixture.date) {
+      const d = new Date(fixture.fixture.date);
+      matchDate = fixture.fixture.date.split('T')[0];
+      matchTime = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
     }
-  }
 
-  return {
-    fixture: {
-      id: f.id || f.fixture_id || Math.random().toString(36).substr(2, 9),
-      date: fixtureDate + 'T15:00:00Z',
-      status: {
-        short: status,
-        long: statusLong,
-        elapsed: elapsed
-      },
-      venue: f.venue || f.stadium || "Stadium"
-    },
-    league: {
-      id: getLeagueId(championship),
-      name: getLeagueName(championship),
-      country: getCountry(championship),
-      emoji: getEmoji(championship)
-    },
-    teams: {
-      home: {
-        id: null,
-        name: homeTeam,
-        logo: null
-      },
-      away: {
-        id: null,
-        name: awayTeam,
-        logo: null
+    // Extract status
+    let status = "NS";
+    if (fixture.status) {
+      status = fixture.status;
+    } else if (fixture.fixture && fixture.fixture.status) {
+      status = fixture.fixture.status.short || fixture.fixture.status;
+    }
+
+    // Normalize status
+    if (status === "1H" || status === "2H" || status === "HT") {
+      status = "LIVE";
+    } else if (status === "Finished") {
+      status = "FT";
+    } else if (status === "Not Started") {
+      status = "NS";
+    }
+
+    // Extract teams
+    let homeTeam = "Home Team";
+    let awayTeam = "Away Team";
+
+    if (fixture.home && fixture.away) {
+      homeTeam = fixture.home;
+      awayTeam = fixture.away;
+    } else if (fixture.home_team && fixture.away_team) {
+      homeTeam = fixture.home_team;
+      awayTeam = fixture.away_team;
+    } else if (fixture.teams && fixture.teams.home && fixture.teams.away) {
+      homeTeam = fixture.teams.home.name || fixture.teams.home;
+      awayTeam = fixture.teams.away.name || fixture.teams.away;
+    }
+
+    // Extract scores
+    let homeGoals = null;
+    let awayGoals = null;
+
+    if (status === "FT" || status === "LIVE") {
+      if (fixture.home_score !== undefined) {
+        homeGoals = fixture.home_score;
+        awayGoals = fixture.away_score;
+      } else if (fixture.home_goals !== undefined) {
+        homeGoals = fixture.home_goals;
+        awayGoals = fixture.away_goals;
+      } else if (fixture.goals) {
+        homeGoals = fixture.goals.home;
+        awayGoals = fixture.goals.away;
+      } else if (fixture.score && fixture.score.fulltime) {
+        homeGoals = fixture.score.fulltime.home;
+        awayGoals = fixture.score.fulltime.away;
       }
-    },
-    goals: {
-      home: homeGoals,
-      away: awayGoals
     }
-  };
+
+    return {
+      id: fixture.id || fixture.fixture_id || Math.random().toString(36).substr(2, 9),
+      league: championship.name,
+      leagueEmoji: championship.emoji,
+      date: matchDate,
+      time: matchTime,
+      home: homeTeam,
+      away: awayTeam,
+      homeGoals: homeGoals,
+      awayGoals: awayGoals,
+      status: status,
+      venue: fixture.venue || fixture.stadium || "Stadium"
+    };
+  } catch (err) {
+    console.error('Error parsing match:', err);
+    return null;
+  }
 }
 
-// Helper functions
-function getLeagueId(championship) {
-  const map = {
-    'premierleague': '39',
-    'laliga': '140',
-    'bundesliga': '78',
-    'seriea': '135',
-    'ligue1': '61',
-    'championsleague': '2',
-    'europaleague': '3'
-  };
-  return map[championship] || '39';
-}
+function generateWhatsAppMessage(matches, date) {
+  const formattedDate = new Date(date).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
 
-function getLeagueName(championship) {
-  const names = {
-    'premierleague': 'Premier League',
-    'laliga': 'La Liga',
-    'bundesliga': 'Bundesliga',
-    'seriea': 'Serie A',
-    'ligue1': 'Ligue 1',
-    'championsleague': 'Champions League',
-    'europaleague': 'Europa League'
-  };
-  return names[championship] || championship;
-}
-
-function getCountry(championship) {
-  const map = {
-    'premierleague': 'England',
-    'laliga': 'Spain', 
-    'bundesliga': 'Germany',
-    'seriea': 'Italy',
-    'ligue1': 'France',
-    'championsleague': 'Europe',
-    'europaleague': 'Europe'
-  };
-  return map[championship] || 'Europe';
-}
-
-function getEmoji(championship) {
-  const map = {
-    'premierleague': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-    'laliga': '🇪🇸',
-    'bundesliga': '🇩🇪',
-    'seriea': '🇮🇹', 
-    'ligue1': '🇫🇷',
-    'championsleague': '🏆',
-    'europaleague': '🏆'
-  };
-  return map[championship] || '⚽';
-}
-
-function getSampleFixtures(championship, date) {
-  const teams = getSampleTeams(championship);
+  let message = `⚽ *FOOTBALL DAILY UPDATE* ⚽\n\n`;
+  message += `📅 ${formattedDate}\n\n`;
   
+  // Live matches
+  const liveMatches = matches.filter(m => m.status === "LIVE");
+  if (liveMatches.length > 0) {
+    message += `🔴 *LIVE NOW*\n`;
+    liveMatches.forEach(match => {
+      message += `${match.leagueEmoji} ${match.home} ${match.homeGoals || 0}-${match.awayGoals || 0} ${match.away}\n`;
+    });
+    message += `\n`;
+  }
+
+  // Results
+  const completedMatches = matches.filter(m => m.status === "FT");
+  if (completedMatches.length > 0) {
+    message += `✅ *TODAY'S RESULTS*\n\n`;
+    
+    // Group by league
+    const byLeague = {};
+    completedMatches.forEach(match => {
+      if (!byLeague[match.league]) byLeague[match.league] = [];
+      byLeague[match.league].push(match);
+    });
+    
+    Object.entries(byLeague).forEach(([league, leagueMatches]) => {
+      const emoji = leagueMatches[0].leagueEmoji;
+      message += `${emoji} *${league}*\n`;
+      leagueMatches.forEach(match => {
+        message += `• ${match.home} ${match.homeGoals}-${match.awayGoals} ${match.away}\n`;
+      });
+      message += `\n`;
+    });
+  }
+
+  // Upcoming
+  const upcomingMatches = matches.filter(m => m.status === "NS");
+  if (upcomingMatches.length > 0) {
+    message += `📋 *UPCOMING MATCHES*\n\n`;
+    
+    // Group by league
+    const byLeague = {};
+    upcomingMatches.forEach(match => {
+      if (!byLeague[match.league]) byLeague[match.league] = [];
+      byLeague[match.league].push(match);
+    });
+    
+    Object.entries(byLeague).forEach(([league, leagueMatches]) => {
+      const emoji = leagueMatches[0].leagueEmoji;
+      message += `${emoji} *${league}*\n`;
+      leagueMatches.slice(0, 3).forEach(match => {
+        message += `🕒 ${match.time} - ${match.home} vs ${match.away}\n`;
+      });
+      message += `\n`;
+    });
+  }
+
+  // Match of the day (if there are completed matches)
+  if (completedMatches.length > 0) {
+    const highScoring = completedMatches.reduce((max, match) => {
+      const total = (match.homeGoals || 0) + (match.awayGoals || 0);
+      const maxTotal = (max.homeGoals || 0) + (max.awayGoals || 0);
+      return total > maxTotal ? match : max;
+    }, completedMatches[0]);
+    
+    if ((highScoring.homeGoals || 0) + (highScoring.awayGoals || 0) >= 4) {
+      message += `🌟 *MATCH OF THE DAY*\n`;
+      message += `${highScoring.leagueEmoji} ${highScoring.home} ${highScoring.homeGoals}-${highScoring.awayGoals} ${highScoring.away}\n`;
+      message += `🎯 ${(highScoring.homeGoals || 0) + (highScoring.awayGoals || 0)} goals thriller!\n\n`;
+    }
+  }
+
+  // Stats
+  message += `📊 *DAILY STATS*\n`;
+  message += `• Total Matches: ${matches.length}\n`;
+  message += `• Live Now: ${liveMatches.length}\n`;
+  message += `• Completed: ${completedMatches.length}\n`;
+  message += `• Upcoming: ${upcomingMatches.length}\n\n`;
+
+  message += `_Stay tuned for more updates!_\n`;
+  message += `#Football #Soccer #MatchDay`;
+
+  return message;
+}
+
+function getSampleMatches(date) {
   return [
     {
       id: 1,
-      home: teams[0],
-      away: teams[1],
-      home_score: 2,
-      away_score: 1,
+      league: "Premier League",
+      leagueEmoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+      date: date,
+      time: "15:00",
+      home: "Manchester United",
+      away: "Liverpool",
+      homeGoals: 2,
+      awayGoals: 1,
       status: "FT",
-      venue: "Stadium 1",
-      date: `${date}T15:00:00Z`
+      venue: "Old Trafford"
     },
     {
       id: 2,
-      home: teams[2],
-      away: teams[3],
-      home_score: 1,
-      away_score: 1,
+      league: "La Liga",
+      leagueEmoji: "🇪🇸",
+      date: date,
+      time: "17:30",
+      home: "Real Madrid",
+      away: "Barcelona",
+      homeGoals: 3,
+      awayGoals: 3,
       status: "LIVE",
-      venue: "Stadium 2",
-      date: `${date}T17:30:00Z`,
-      elapsed: "65"
+      venue: "Santiago Bernabéu"
     },
     {
       id: 3,
-      home: teams[4],
-      away: teams[5],
+      league: "Serie A",
+      leagueEmoji: "🇮🇹",
+      date: date,
+      time: "20:00",
+      home: "AC Milan",
+      away: "Inter Milan",
+      homeGoals: null,
+      awayGoals: null,
       status: "NS",
-      venue: "Stadium 3",
-      date: `${date}T20:00:00Z`
+      venue: "San Siro"
+    },
+    {
+      id: 4,
+      league: "Bundesliga",
+      leagueEmoji: "🇩🇪",
+      date: date,
+      time: "14:30",
+      home: "Bayern Munich",
+      away: "Borussia Dortmund",
+      homeGoals: 4,
+      awayGoals: 2,
+      status: "FT",
+      venue: "Allianz Arena"
     }
-  ].map(f => parseFixture(f, championship, date));
-}
-
-function getSampleTeams(championship) {
-  const teams = {
-    'premierleague': ['Manchester United', 'Liverpool', 'Arsenal', 'Chelsea', 'Manchester City', 'Tottenham'],
-    'laliga': ['Real Madrid', 'Barcelona', 'Atletico Madrid', 'Sevilla', 'Valencia', 'Real Betis'],
-    'bundesliga': ['Bayern Munich', 'Borussia Dortmund', 'RB Leipzig', 'Bayer Leverkusen', 'Union Berlin', 'Freiburg'],
-    'seriea': ['Inter Milan', 'AC Milan', 'Juventus', 'Napoli', 'Roma', 'Lazio'],
-    'ligue1': ['PSG', 'Marseille', 'Monaco', 'Lyon', 'Lille', 'Nice']
-  };
-  return teams[championship] || teams['premierleague'];
+  ];
 }
