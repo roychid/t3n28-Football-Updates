@@ -669,225 +669,77 @@
     <script>
     // ==================== CONFIGURATION ==================
     const CONFIG = {
-        // Backend API routes
-        API_BASE: '/api', // Your Vercel/Netlify backend
+        API_BASE: '/api', // Your backend API
         
-        // Top leagues only (for better performance)
-        TOP_LEAGUES: [
-            { id: 39, name: "Premier League", country: "England", emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", apiName: "premierleague" },
-            { id: 140, name: "La Liga", country: "Spain", emoji: "🇪🇸", apiName: "laliga" },
-            { id: 78, name: "Bundesliga", country: "Germany", emoji: "🇩🇪", apiName: "bundesliga" },
-            { id: 135, name: "Serie A", country: "Italy", emoji: "🇮🇹", apiName: "seriea" },
-            { id: 61, name: "Ligue 1", country: "France", emoji: "🇫🇷", apiName: "ligue1" },
-            { id: 94, name: "Primeira Liga", country: "Portugal", emoji: "🇵🇹", apiName: "primeiraliga" },
-            { id: 88, name: "Eredivisie", country: "Netherlands", emoji: "🇳🇱", apiName: "eredivisie" },
-            { id: 2, name: "Champions League", country: "Europe", emoji: "🏆", apiName: "championsleague" },
-            { id: 3, name: "Europa League", country: "Europe", emoji: "🏆", apiName: "europaleague" },
-            { id: 45, name: "FA Cup", country: "England", emoji: "🏆", apiName: "facup" }
-        ],
-        
-        // WhatsApp templates
-        TEMPLATES: {
-            morning: "🌅 *MORNING FOOTBALL UPDATE* 🌅\nGood morning football fans! Here are today's matches across Europe...",
-            results: "📊 *RESULTS SUMMARY*\nHere are the results from yesterday's matches...",
-            preview: "🔮 *MATCH PREVIEW*\nToday's most anticipated matches...",
-            live: "🔴 *LIVE UPDATES*\nFollow the action live..."
-        }
+        // Simple league list
+        LEAGUES: [
+            { id: '39', name: 'Premier League', emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+            { id: '140', name: 'La Liga', emoji: '🇪🇸' },
+            { id: '78', name: 'Bundesliga', emoji: '🇩🇪' },
+            { id: '135', name: 'Serie A', emoji: '🇮🇹' },
+            { id: '61', name: 'Ligue 1', emoji: '🇫🇷' }
+        ]
     };
     
-    // ==================== STATE ====================
-    let currentGames = [];
-    let currentDate = new Date().toISOString().split('T')[0];
-    
-    // ==================== INITIALIZATION ====================
+    // ==================== INITIALIZATION ==================
     document.addEventListener('DOMContentLoaded', function() {
         // Set today's date
         const today = new Date();
         document.getElementById('dateInput').valueAsDate = today;
         document.getElementById('todayDate').textContent = formatDate(today);
         
-        // Load initial games
+        // Load games automatically
         setTimeout(() => loadGames(), 1000);
     });
     
-    // ==================== API FUNCTIONS ====================
-    async function fetchFromBackend(endpoint, params = {}) {
+    // ==================== API FUNCTIONS ==================
+    async function loadGames() {
+        const output = document.getElementById('gamesOutput');
+        output.innerHTML = '<div class="loading">Loading today\'s matches...</div>';
+        
+        const date = document.getElementById('dateInput').value;
+        const leagueSelect = document.getElementById('leagueSelect').value;
+        
         try {
-            const queryString = new URLSearchParams(params).toString();
-            const url = `${CONFIG.API_BASE}/${endpoint}${queryString ? `?${queryString}` : ''}`;
-            
-            console.log(`Fetching from backend: ${url}`);
-            
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`Backend error: ${response.status}`);
+            // Determine which league to load
+            let leagueId = '39'; // Default to Premier League
+            if (leagueSelect && leagueSelect !== 'top' && leagueSelect !== 'all') {
+                leagueId = leagueSelect;
             }
             
+            // Call your backend API
+            const response = await fetch(`/api/fixtures?league=${leagueId}&date=${date}`);
             const data = await response.json();
             
             if (!data.success) {
-                throw new Error(data.error || 'Unknown error');
+                throw new Error(data.error || 'API error');
             }
             
-            return data;
-            
-        } catch (error) {
-            console.error(`Fetch error for ${endpoint}:`, error);
-            throw error;
-        }
-    }
-    
-    // ==================== GAME FUNCTIONS ====================
-    async function loadGames() {
-        const output = document.getElementById('gamesOutput');
-        output.innerHTML = '<div class="loading">Loading fixtures...</div>';
-        
-        const leagueSelect = document.getElementById('leagueSelect').value;
-        const date = document.getElementById('dateInput').value || currentDate;
-        
-        try {
-            let leaguesToLoad = [];
-            
-            if (!leagueSelect || leagueSelect === "top" || leagueSelect === "all") {
-                leaguesToLoad = CONFIG.TOP_LEAGUES;
-            } else {
-                const league = CONFIG.TOP_LEAGUES.find(l => l.id.toString() === leagueSelect);
-                leaguesToLoad = league ? [league] : CONFIG.TOP_LEAGUES.slice(0, 3);
-            }
-            
-            // Show progress
-            document.getElementById('progressContainer').style.display = 'block';
-            
-            const allFixtures = [];
-            
-            for (let i = 0; i < leaguesToLoad.length; i++) {
-                const league = leaguesToLoad[i];
-                
-                // Update progress
-                const progress = ((i + 1) / leaguesToLoad.length) * 100;
-                document.getElementById('progressFill').style.width = `${progress}%`;
-                document.getElementById('progressText').textContent = 
-                    `Loading ${league.name} (${i + 1}/${leaguesToLoad.length})...`;
-                
-                try {
-                    const result = await fetchFromBackend('proxy', {
-                        endpoint: 'fixtures',
-                        league: league.id,
-                        date: date
-                    });
-                    
-                    if (result.data && Array.isArray(result.data)) {
-                        const fixturesWithLeague = result.data.map(f => ({
-                            ...f,
-                            leagueInfo: league
-                        }));
-                        allFixtures.push(...fixturesWithLeague);
-                    }
-                    
-                    // Small delay to avoid overwhelming the API
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    
-                } catch (error) {
-                    console.error(`Failed to fetch ${league.name}:`, error);
-                }
-            }
-            
-            // Hide progress bar
-            document.getElementById('progressContainer').style.display = 'none';
-            
-            if (allFixtures.length === 0) {
+            if (data.fixtures.length === 0) {
                 output.innerHTML = `
-                    <div class="error">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p>No fixtures found.</p>
-                        <small>Try a different date or select fewer leagues</small>
+                    <div class="success">
+                        <i class="fas fa-info-circle"></i>
+                        <p>No matches scheduled for ${formatDisplayDate(date)}</p>
+                        <small>Try a different date or league</small>
                     </div>
                 `;
                 updateStats(0, 0, 0);
                 return;
             }
             
-            currentGames = allFixtures;
-            displayGames(allFixtures);
-            showToast(`Loaded ${allFixtures.length} matches from ${leaguesToLoad.length} leagues!`);
+            displayGames(data.fixtures);
+            showToast(`Loaded ${data.fixtures.length} matches!`);
             
         } catch (error) {
-            console.error('Error loading games:', error);
+            console.error('Error:', error);
             output.innerHTML = `
                 <div class="error">
                     <i class="fas fa-exclamation-circle"></i>
-                    <p>Error loading fixtures.</p>
+                    <p>Error loading matches</p>
                     <small>${error.message}</small>
                     <p style="margin-top: 10px; font-size: 12px;">
-                        Make sure your backend API is running and configured properly.
+                        Make sure your backend API is running.
                     </p>
-                </div>
-            `;
-            document.getElementById('progressContainer').style.display = 'none';
-        }
-    }
-    
-    async function loadLiveGames() {
-        const output = document.getElementById('gamesOutput');
-        output.innerHTML = '<div class="loading">Checking for live games...</div>';
-        
-        const date = document.getElementById('dateInput').value || currentDate;
-        
-        try {
-            // Check all top leagues for live games
-            const liveFixtures = [];
-            
-            for (const league of CONFIG.TOP_LEAGUES.slice(0, 5)) { // Check only 5 leagues for performance
-                try {
-                    const result = await fetchFromBackend('proxy', {
-                        endpoint: 'fixtures',
-                        league: league.id,
-                        date: date
-                    });
-                    
-                    if (result.data && Array.isArray(result.data)) {
-                        // Filter for live games
-                        const leagueLiveFixtures = result.data.filter(f => {
-                            const status = f.fixture?.status?.short || f.status;
-                            return status === 'LIVE' || status === 'HT' || status === '1H' || status === '2H';
-                        });
-                        
-                        if (leagueLiveFixtures.length > 0) {
-                            const fixturesWithLeague = leagueLiveFixtures.map(f => ({
-                                ...f,
-                                leagueInfo: league
-                            }));
-                            liveFixtures.push(...fixturesWithLeague);
-                        }
-                    }
-                    
-                } catch (error) {
-                    console.error(`Error checking live games for ${league.name}:`, error);
-                }
-            }
-            
-            if (liveFixtures.length === 0) {
-                output.innerHTML = `
-                    <div class="success">
-                        <i class="fas fa-broadcast-tower"></i>
-                        <p>No live games at the moment.</p>
-                        <small>Check "LOAD GAMES" for upcoming matches</small>
-                    </div>
-                `;
-                return;
-            }
-            
-            currentGames = liveFixtures;
-            displayGames(liveFixtures);
-            showToast(`Found ${liveFixtures.length} live matches!`);
-            
-        } catch (error) {
-            console.error('Error loading live games:', error);
-            output.innerHTML = `
-                <div class="error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>Error loading live games.</p>
                 </div>
             `;
         }
@@ -896,80 +748,57 @@
     function displayGames(fixtures) {
         const output = document.getElementById('gamesOutput');
         
-        if (!fixtures || fixtures.length === 0) {
-            output.innerHTML = '<div class="error">No games found</div>';
-            updateStats(0, 0, 0);
-            return;
-        }
-        
-        // Sort by time
-        fixtures.sort((a, b) => {
-            const timeA = new Date(a.fixture?.date || a.date || 0);
-            const timeB = new Date(b.fixture?.date || b.date || 0);
-            return timeA - timeB;
-        });
-        
         let html = '';
         let liveCount = 0;
         let completedCount = 0;
         
         fixtures.forEach(game => {
-            const matchTime = game.fixture?.date ? new Date(game.fixture.date) : new Date();
-            const isLive = game.fixture?.status?.short === 'LIVE' || 
-                          game.fixture?.status?.short === 'HT' ||
-                          game.fixture?.status?.short === '1H' ||
-                          game.fixture?.status?.short === '2H';
-            const isCompleted = game.fixture?.status?.short === 'FT' ||
-                               game.fixture?.status?.short === 'AET' ||
-                               game.fixture?.status?.short === 'PEN';
+            const isLive = game.fixture.status.short === 'LIVE';
+            const isCompleted = game.fixture.status.short === 'FT';
             
             if (isLive) liveCount++;
             if (isCompleted) completedCount++;
             
-            const homeTeam = game.teams?.home?.name || game.home || 'Unknown';
-            const awayTeam = game.teams?.away?.name || game.away || 'Unknown';
-            const homeScore = game.goals?.home || game.home_goals || null;
-            const awayScore = game.goals?.away || game.away_goals || null;
-            const leagueEmoji = game.leagueInfo?.emoji || '⚽';
-            const leagueName = game.leagueInfo?.name || 'Unknown League';
+            const matchTime = new Date(game.fixture.date);
+            const timeStr = matchTime.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
             
             html += `
                 <div class="game-item" style="${isLive ? 'border-left-color: #ff4444;' : ''}">
                     <div class="game-header">
                         <div class="league">
-                            ${matchTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            ${timeStr}
                             ${isLive ? '<span class="live-badge">LIVE</span>' : ''}
                         </div>
                         <div class="time">
-                            ${leagueEmoji} ${leagueName}
+                            ${game.league.emoji || '⚽'} ${game.league.name}
                         </div>
                     </div>
                     
                     <div class="teams">
                         <div class="team">
-                            <div class="team-name">${homeTeam}</div>
-                            <div class="form">${generateFormBoxes()}</div>
+                            <div class="team-name">${game.teams.home.name}</div>
                         </div>
                         <div class="vs">VS</div>
                         <div class="team">
-                            <div class="team-name">${awayTeam}</div>
-                            <div class="form">${generateFormBoxes()}</div>
+                            <div class="team-name">${game.teams.away.name}</div>
                         </div>
                     </div>
                     
-                    ${homeScore !== null ? `
-                        <div style="text-align: center; font-size: 2rem; font-weight: bold; margin: 10px 0; color: #25D366;">
-                            ${homeScore} - ${awayScore}
-                            ${isLive ? '<span class="live-badge" style="margin-left: 10px;">LIVE</span>' : ''}
+                    ${game.goals.home !== null ? `
+                        <div style="text-align: center; font-size: 2rem; font-weight: bold; margin: 15px 0; color: #25D366;">
+                            ${game.goals.home} - ${game.goals.away}
                         </div>
                     ` : `
-                        <div style="text-align: center; color: #aaa; font-size: 0.9rem; margin: 10px 0;">
-                            ${game.fixture?.status?.long || 'Not Started'}
+                        <div style="text-align: center; color: #aaa; font-size: 0.9rem; margin: 15px 0;">
+                            ${game.fixture.status.long}
                         </div>
                     `}
                     
-                    <div style="font-size: 0.8rem; color: #888; text-align: center; margin-top: 10px;">
-                        ${game.venue || 'Venue TBD'}
+                    <div style="text-align: center; color: #888; font-size: 0.8rem;">
+                        ${game.fixture.venue}
                     </div>
                 </div>
             `;
@@ -979,156 +808,60 @@
         updateStats(fixtures.length, liveCount, completedCount);
     }
     
-    // ==================== WHATSAPP FUNCTIONS ====================
+    // ==================== WHATSAPP FUNCTIONS ==================
     async function generateWhatsAppUpdate() {
         const output = document.getElementById('whatsappOutput');
-        output.innerHTML = '<div class="loading">Generating football update...</div>';
-        
-        const date = document.getElementById('dateInput').value || currentDate;
-        const includeAllLeagues = document.getElementById('includeAllLeagues').checked;
+        output.innerHTML = '<div class="loading">Generating update...</div>';
         
         try {
-            // Use current games if available, otherwise fetch
-            let fixtures = currentGames;
+            const response = await fetch('/api/whatsapp-updates');
+            const data = await response.json();
             
-            if (fixtures.length === 0 || includeAllLeagues) {
-                // Fetch fresh data
-                const result = await fetchFromBackend('whatsapp-updates');
-                fixtures = result.matches || [];
+            if (!data.success) {
+                throw new Error(data.error || 'Generation failed');
             }
             
-            if (fixtures.length === 0) {
+            if (data.messages && data.messages.length > 0) {
+                output.innerHTML = `<div style="white-space: pre-wrap;">${data.messages[0].content}</div>`;
+                updateMessageStats(data.messages[0].content);
+                showToast(`Generated with ${data.matches.length} matches!`);
+            } else {
                 output.innerHTML = `
                     <div class="error">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <p>No fixtures found to generate update.</p>
-                        <button onclick="loadGames()" style="margin-top: 10px; padding: 8px 16px; background: #25D366; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                            Load Games First
-                        </button>
+                        <p>No matches found for today</p>
                     </div>
                 `;
-                return;
             }
             
-            // Generate message
-            const message = generateSimpleMessage(fixtures, date);
-            output.innerHTML = `<div style="white-space: pre-wrap; font-family: monospace;">${message}</div>`;
-            updateMessageStats(message);
-            showToast(`Generated update with ${fixtures.length} matches!`);
-            
         } catch (error) {
-            console.error('Error generating update:', error);
+            console.error('Error:', error);
             output.innerHTML = `
                 <div class="error">
                     <i class="fas fa-exclamation-circle"></i>
-                    <p>Error generating update.</p>
+                    <p>Error generating update</p>
                     <small>${error.message}</small>
                 </div>
             `;
         }
     }
     
-    function generateSimpleMessage(fixtures, date) {
-        const formattedDate = new Date(date).toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        
-        let message = `⚽ *FOOTBALL DAILY UPDATE* ⚽\n\n`;
-        message += `📅 ${formattedDate}\n\n`;
-        
-        // Live matches
-        const liveFixtures = fixtures.filter(f => 
-            f.status === 'LIVE' || 
-            f.fixture?.status?.short === 'LIVE' ||
-            f.fixture?.status?.short === 'HT'
-        );
-        
-        if (liveFixtures.length > 0) {
-            message += `🔴 *LIVE NOW* 🔴\n`;
-            liveFixtures.forEach(f => {
-                const home = f.teams?.home?.name || f.home || 'Team A';
-                const away = f.teams?.away?.name || f.away || 'Team B';
-                const homeScore = f.goals?.home || f.homeGoals || 0;
-                const awayScore = f.goals?.away || f.awayGoals || 0;
-                const league = f.leagueInfo?.name || f.league || 'League';
-                
-                message += `⚡ ${home} ${homeScore}-${awayScore} ${away}\n`;
-                message += `   🏆 ${league}\n`;
-            });
-            message += `\n`;
-        }
-        
-        // Results
-        const completedFixtures = fixtures.filter(f => 
-            f.status === 'FT' || 
-            f.fixture?.status?.short === 'FT' ||
-            f.fixture?.status?.short === 'AET'
-        );
-        
-        if (completedFixtures.length > 0) {
-            message += `✅ *RESULTS*\n`;
-            completedFixtures.slice(0, 10).forEach(f => { // Limit to 10
-                const home = f.teams?.home?.name || f.home || 'Team A';
-                const away = f.teams?.away?.name || f.away || 'Team B';
-                const homeScore = f.goals?.home || f.homeGoals || 0;
-                const awayScore = f.goals?.away || f.awayGoals || 0;
-                const league = f.leagueInfo?.name || f.league || 'League';
-                
-                message += `• ${home} ${homeScore}-${awayScore} ${away}\n`;
-            });
-            message += `\n`;
-        }
-        
-        // Upcoming
-        const upcomingFixtures = fixtures.filter(f => 
-            f.status === 'NS' || 
-            f.fixture?.status?.short === 'NS' ||
-            !f.status
-        );
-        
-        if (upcomingFixtures.length > 0) {
-            message += `📋 *UPCOMING*\n`;
-            upcomingFixtures.slice(0, 5).forEach(f => { // Limit to 5
-                const home = f.teams?.home?.name || f.home || 'Team A';
-                const away = f.teams?.away?.name || f.away || 'Team B';
-                const time = f.fixture?.date ? 
-                    new Date(f.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 
-                    f.time || 'TBD';
-                const league = f.leagueInfo?.name || f.league || 'League';
-                
-                message += `🕒 ${time} - ${home} vs ${away}\n`;
-            });
-            message += `\n`;
-        }
-        
-        // Stats
-        message += `📊 *STATS*\n`;
-        message += `• Total Matches: ${fixtures.length}\n`;
-        message += `• Live Now: ${liveFixtures.length}\n`;
-        message += `• Results: ${completedFixtures.length}\n`;
-        message += `• Upcoming: ${upcomingFixtures.length}\n\n`;
-        
-        // Footer
-        message += `Stay tuned for more updates! ⚽\n\n`;
-        message += `#Football #Soccer #Matchday #SportsUpdates`;
-        
-        return message;
-    }
-    
-    // ==================== UTILITY FUNCTIONS ====================
-    function generateFormBoxes() {
-        const forms = ['W', 'D', 'L', 'W', 'D'];
-        return forms.map(form => `<span class="form-box ${form}">${form}</span>`).join('');
-    }
-    
+    // ==================== UTILITY FUNCTIONS ==================
     function formatDate(date) {
         return date.toLocaleDateString('en-US', { 
             weekday: 'short', 
             month: 'short', 
             day: 'numeric' 
+        });
+    }
+    
+    function formatDisplayDate(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { 
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
     }
     
@@ -1139,38 +872,38 @@
     }
     
     function updateMessageStats(message) {
-        const charCount = message.length;
-        const lineCount = message.split('\n').length;
         document.getElementById('messageStats').textContent = 
-            `${charCount} characters • ${lineCount} lines`;
+            `${message.length} characters • ${message.split('\\n').length} lines`;
     }
     
     async function copyToClipboard() {
         const output = document.getElementById('whatsappOutput');
-        const textContent = output.textContent || output.innerText;
+        const text = output.textContent;
         
-        if (!textContent || textContent.includes('Your WhatsApp message')) {
+        if (!text || text.includes('Your WhatsApp message')) {
             showToast('No message to copy!', 'error');
             return;
         }
         
         try {
-            await navigator.clipboard.writeText(textContent);
+            await navigator.clipboard.writeText(text);
             showToast('Copied to clipboard!');
-            
-            // Visual feedback
-            const btn = document.getElementById('copyBtn');
-            btn.innerHTML = '<i class="fas fa-check"></i> COPIED!';
-            btn.style.background = '#1da851';
-            
-            setTimeout(() => {
-                btn.innerHTML = '<i class="far fa-copy"></i> COPY TO CLIPBOARD';
-                btn.style.background = '';
-            }, 2000);
-            
         } catch (error) {
-            showToast('Failed to copy!', 'error');
+            showToast('Failed to copy', 'error');
         }
+    }
+    
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMessage');
+        
+        toastMsg.textContent = message;
+        toast.style.background = type === 'error' ? '#ff4444' : '#25D366';
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
     }
     
     function clearOutput() {
@@ -1181,49 +914,6 @@
                 <small>Click "GENERATE UPDATE" to start</small>
             </div>
         `;
-        document.getElementById('messageStats').textContent = '0 characters • 0 lines';
-    }
-    
-    function testOnWhatsApp() {
-        const output = document.getElementById('whatsappOutput');
-        const textContent = output.textContent || output.innerText;
-        
-        if (!textContent || textContent.includes('Your WhatsApp message')) {
-            showToast('No message to test!', 'error');
-            return;
-        }
-        
-        const encoded = encodeURIComponent(textContent);
-        window.open(`https://wa.me/?text=${encoded}`, '_blank');
-        showToast('Opened in WhatsApp!');
-    }
-    
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toastMessage');
-        
-        toastMessage.textContent = message;
-        
-        if (type === 'error') {
-            toast.style.background = '#ff4444';
-        } else {
-            toast.style.background = '#25D366';
-        }
-        
-        toast.classList.add('show');
-        
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
-    }
-    
-    function useTemplate(type) {
-        const template = CONFIG.TEMPLATES[type];
-        if (template) {
-            document.getElementById('whatsappOutput').innerHTML = 
-                `<div style="white-space: pre-wrap;">${template}</div>`;
-            showToast(`Loaded ${type} template`);
-        }
     }
 </script>
 </body>
