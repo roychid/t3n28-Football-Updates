@@ -4,7 +4,7 @@ export default async function handler(req, res) {
     // YOUR RapidAPI Key - PUT IT HERE
     const RAPIDAPI_KEY = "YOUR_RAPIDAPI_KEY_HERE"; // ← PUT YOUR KEY
     
-    if (!RAPIDAPI_KEY || RAPIDAPI_KEY === "YOUR_RAPIDAPI_KEY_HERE") {
+    if (!RAPIDAPI_KEY || RAPIDAPI_KEY === "b1d4f776c5msh0a5a6ce81cd9670p1e5ae8jsn169c02186937") {
       return res.status(500).json({ error: "Please add your RapidAPI key in api/fixtures.js" });
     }
 
