@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "api/fixtures.js": {
+      "maxDuration": 10
+    },
+    "api/whatsapp-updates.js": {
+      "maxDuration": 10
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    }
+  ]
+}
