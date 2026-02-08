@@ -1,182 +1,168 @@
 // api/whatsapp-updates.js
 export default async function handler(req, res) {
   try {
-    const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
-    if (!RAPIDAPI_KEY) throw new Error("Missing RAPIDAPI_KEY environment variable");
+    // YOUR RapidAPI Key - PUT IT HERE
+    const RAPIDAPI_KEY = "YOUR_RAPIDAPI_KEY_HERE"; // ← PUT YOUR KEY (SAME AS ABOVE)
+    
+    if (!RAPIDAPI_KEY || RAPIDAPI_KEY === "YOUR_RAPIDAPI_KEY_HERE") {
+      return res.status(500).json({ error: "Please add your RapidAPI key in api/whatsapp-updates.js" });
+    }
 
-    // Define top championships
-    const topChampionships = [
-      "premierleague",
-      "laliga",
-      "bundesliga",
-      "seriea",
-      "ligue1",
-      "championsleague"
+    // Top championships
+    const championships = [
+      { id: "premierleague", name: "Premier League", emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+      { id: "laliga", name: "La Liga", emoji: "🇪🇸" },
+      { id: "bundesliga", name: "Bundesliga", emoji: "🇩🇪" },
+      { id: "seriea", name: "Serie A", emoji: "🇮🇹" },
+      { id: "ligue1", name: "Ligue 1", emoji: "🇫🇷" },
+      { id: "championsleague", name: "Champions League", emoji: "🏆" }
     ];
 
     const today = new Date().toISOString().split("T")[0];
-
     const allMatches = [];
 
-    for (const champ of topChampionships) {
+    // Fetch matches for each championship
+    for (const champ of championships) {
       try {
-        const url = `https://football98.p.rapidapi.com/${champ}/fixtures/`;
-
+        console.log(`Fetching ${champ.name}...`);
+        
+        const url = `https://football98.p.rapidapi.com/${champ.id}/fixtures/?date=${today}`;
+        
         const response = await fetch(url, {
           headers: {
             "X-RapidAPI-Key": RAPIDAPI_KEY,
-            "X-RapidAPI-Host": "football98.p.rapidapi.com"
+            "X-RapidAPI-Host": "football98.p.rapidapi.com",
+            "Accept": "application/json"
           }
         });
 
-        const data = await response.json();
-
-        if (Array.isArray(data) && data.length > 0) {
-          // Map Football98 fixtures to your format
-          data.forEach(match => {
-            // Some fields may be missing; default to placeholders
-            allMatches.push({
-              league: champ.charAt(0).toUpperCase() + champ.slice(1),
-              time: match.time || "TBD",
-              home: match.home || "Unknown",
-              away: match.away || "Unknown",
-              homeGoals: match.home_goals ?? null,
-              awayGoals: match.away_goals ?? null,
-              status: match.status || "NS",
-              venue: match.venue || "TBD",
-              round: match.round || "N/A"
-            });
-          });
+        if (!response.ok) {
+          console.warn(`Failed ${champ.name}: ${response.status}`);
+          continue;
         }
+
+        const data = await response.json();
+        
+        // Extract fixtures
+        let fixtures = [];
+        if (Array.isArray(data)) {
+          fixtures = data;
+        } else if (data.response && Array.isArray(data.response)) {
+          fixtures = data.response;
+        }
+        
+        // Format matches
+        fixtures.forEach(match => {
+          allMatches.push({
+            id: match.id || Math.random().toString(36).substr(2, 9),
+            league: champ.name,
+            leagueEmoji: champ.emoji,
+            date: match.date || match.time || today,
+            time: match.time ? match.time.split(' ')[1] : "TBD",
+            home: match.home || match.home_team || "Home Team",
+            away: match.away || match.away_team || "Away Team",
+            homeGoals: match.home_goals || match.home_score || null,
+            awayGoals: match.away_goals || match.away_score || null,
+            status: match.status || "NS",
+            venue: match.venue || "TBD",
+            round: match.round || "N/A"
+          });
+        });
+
       } catch (err) {
-        console.error(`Error fetching ${champ}:`, err.message);
+        console.error(`Error ${champ.name}:`, err.message);
+        continue;
       }
     }
 
-    // Group matches by league
-    const matchesByLeague = {};
-    allMatches.forEach(match => {
-      if (!matchesByLeague[match.league]) matchesByLeague[match.league] = [];
-      matchesByLeague[match.league].push(match);
-    });
-
-    const completedMatches = allMatches.filter(m =>
-      ["FT", "AET", "PEN"].includes(m.status)
-    );
-    const upcomingMatches = allMatches.filter(m =>
-      ["NS", "TBD"].includes(m.status)
-    );
-    const liveMatches = allMatches.filter(m =>
-      ["LIVE", "HT", "1H", "2H"].includes(m.status)
-    );
-
-    const whatsappMessages = generateWhatsAppMessages({
-      matchesByLeague,
-      completedMatches,
-      upcomingMatches,
-      liveMatches,
-      today
-    });
-
+    // Generate WhatsApp messages
+    const messages = generateWhatsAppMessages(allMatches, today);
+    
     res.status(200).json({
       success: true,
-      messages: whatsappMessages,
+      date: today,
+      matches: allMatches,
+      messages: messages,
       stats: {
-        totalMatches: allMatches.length,
-        completed: completedMatches.length,
-        upcoming: upcomingMatches.length,
-        live: liveMatches.length
+        total: allMatches.length,
+        live: allMatches.filter(m => m.status === "LIVE").length,
+        completed: allMatches.filter(m => m.status === "FT").length,
+        upcoming: allMatches.filter(m => m.status === "NS").length
       }
     });
 
   } catch (err) {
     console.error("Error:", err);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ 
+      success: false, 
+      error: err.message 
+    });
   }
 }
 
-// WhatsApp message generator (kept mostly unchanged)
-function generateWhatsAppMessages(data) {
-  const { matchesByLeague, completedMatches, upcomingMatches, liveMatches, today } = data;
+function generateWhatsAppMessages(matches, date) {
+  const formattedDate = new Date(date).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  let message = `⚽ *FOOTBALL UPDATE - ${formattedDate.toUpperCase()}* ⚽\n\n`;
   
-  const messages = [];
-
-  // 1. HEADLINE
-  let headline = `⚽ *FOOTBALL DAILY UPDATE* ⚽\n`;
-  headline += `📅 ${new Date(today).toDateString()}\n\n`;
-  messages.push({ type: "headline", content: headline });
-
-  // 2. LIVE MATCHES
+  // Live matches
+  const liveMatches = matches.filter(m => m.status === "LIVE");
   if (liveMatches.length > 0) {
-    let liveMsg = `🔥 *LIVE NOW* 🔥\n\n`;
+    message += `🔴 *LIVE NOW*\n`;
     liveMatches.forEach(match => {
-      liveMsg += `⚡ ${match.home} ${match.homeGoals ?? 0}-${match.awayGoals ?? 0} ${match.away}\n`;
-      liveMsg += `📍 ${match.league} | ${match.time}\n\n`;
+      message += `${match.leagueEmoji} ${match.home} ${match.homeGoals || 0}-${match.awayGoals || 0} ${match.away}\n`;
     });
-    messages.push({ type: "live", content: liveMsg });
+    message += `\n`;
   }
 
-  // 3. COMPLETED MATCH RESULTS
+  // Results
+  const completedMatches = matches.filter(m => m.status === "FT");
   if (completedMatches.length > 0) {
-    let resultsMsg = `✅ *TODAY'S RESULTS*\n\n`;
-    const completedByLeague = {};
+    message += `✅ *RESULTS*\n`;
+    
+    // Group by league
+    const byLeague = {};
     completedMatches.forEach(match => {
-      if (!completedByLeague[match.league]) completedByLeague[match.league] = [];
-      completedByLeague[match.league].push(match);
+      if (!byLeague[match.league]) byLeague[match.league] = [];
+      byLeague[match.league].push(match);
     });
-    Object.entries(completedByLeague).forEach(([league, matches]) => {
-      resultsMsg += `🏆 *${league}*\n`;
-      matches.forEach(match => {
-        const result = `${match.homeGoals}-${match.awayGoals}`;
-        const winner = match.homeGoals > match.awayGoals ? match.home : 
-                      match.awayGoals > match.homeGoals ? match.away : "Draw";
-        resultsMsg += `• ${match.home} ${result} ${match.away}\n  ⭐ ${winner}\n`;
+    
+    Object.entries(byLeague).forEach(([league, leagueMatches]) => {
+      message += `${leagueMatches[0].leagueEmoji} *${league}*\n`;
+      leagueMatches.forEach(match => {
+        message += `• ${match.home} ${match.homeGoals}-${match.awayGoals} ${match.away}\n`;
       });
-      resultsMsg += `\n`;
+      message += `\n`;
     });
-    messages.push({ type: "results", content: resultsMsg });
   }
 
-  // 4. UPCOMING FIXTURES
+  // Upcoming
+  const upcomingMatches = matches.filter(m => m.status === "NS");
   if (upcomingMatches.length > 0) {
-    let fixturesMsg = `📋 *UPCOMING FIXTURES*\n\n`;
-    Object.entries(matchesByLeague).forEach(([league, matches]) => {
-      const upcomingInLeague = matches.filter(m => ["NS", "TBD"].includes(m.status));
-      if (upcomingInLeague.length > 0) {
-        fixturesMsg += `🏆 *${league}*\n`;
-        const byTime = {};
-        upcomingInLeague.forEach(match => {
-          if (!byTime[match.time]) byTime[match.time] = [];
-          byTime[match.time].push(match);
-        });
-        Object.entries(byTime).forEach(([time, timeMatches]) => {
-          fixturesMsg += `🕒 ${time}\n`;
-          timeMatches.forEach(match => {
-            fixturesMsg += `• ${match.home} vs ${match.away}\n`;
-          });
-          fixturesMsg += `\n`;
-        });
-      }
+    message += `📅 *UPCOMING*\n`;
+    upcomingMatches.slice(0, 5).forEach(match => { // Limit to 5
+      message += `🕒 ${match.time} - ${match.home} vs ${match.away}\n`;
     });
-    messages.push({ type: "fixtures", content: fixturesMsg });
+    message += `\n`;
   }
 
-  // 5. HIGHLIGHT MATCH
-  if (completedMatches.length > 0) {
-    const highScoringMatch = completedMatches.reduce((max, match) => {
-      const totalGoals = (match.homeGoals ?? 0) + (match.awayGoals ?? 0);
-      const maxGoals = (max.homeGoals ?? 0) + (max.awayGoals ?? 0);
-      return totalGoals > maxGoals ? match : max;
-    }, completedMatches[0]);
-    if (highScoringMatch) {
-      const highlightMsg = `🌟 *MATCH OF THE DAY* 🌟\n\n` +
-                           `⚽ ${highScoringMatch.home} ${highScoringMatch.homeGoals}-${highScoringMatch.awayGoals} ${highScoringMatch.away}\n` +
-                           `🏆 ${highScoringMatch.league}\n` +
-                           `🎯 Total Goals: ${(highScoringMatch.homeGoals ?? 0) + (highScoringMatch.awayGoals ?? 0)}\n\n` +
-                           `What a thriller! 🔥`;
-      messages.push({ type: "highlight", content: highlightMsg });
-    }
-  }
+  // Stats
+  message += `📊 *STATS*\n`;
+  message += `• Total Matches: ${matches.length}\n`;
+  message += `• Live Now: ${liveMatches.length}\n`;
+  message += `• Results: ${completedMatches.length}\n`;
+  message += `• Upcoming: ${upcomingMatches.length}\n\n`;
 
-  return messages;
+  message += `_Stay tuned for more updates!_ ⚽\n`;
+  message += `#Football #Matchday #Sports`;
+
+  return [{
+    type: "full",
+    content: message
+  }];
 }
